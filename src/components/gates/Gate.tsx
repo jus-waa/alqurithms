@@ -1,41 +1,30 @@
-import { useDrag } from "react-dnd";
-import { useRef, useEffect } from "react";
+import { useDrag } from 'react-dnd';
 
-const Gate = ({ name }: {name: string}) => {
-  const divRef = useRef<HTMLDivElement>(null)
-  
-  const [{ isDragging }, dragRef] = useDrag(() => ({
-    type: "Gate",
-    item: { name },
+const Gate = ({ name } : {name: string}) => {
+  const [{isDragging}, dragRef] = useDrag(() => ({
+    type: "gate",
+    item: {name},
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
-    }),
-  }));
-
-  useEffect(() => {
-    if (divRef.current) {
-      dragRef(divRef.current)
-    }
-  }, [dragRef]);
+    })
+  }))
 
   return (
-    <div
-      ref={divRef}
+    <div  
+      ref={dragRef}
       style={{
-        opacity: isDragging ? 0.5 : 1,
-        height: "40px",
-        width: "40px",
-        border: "1px solid black",
-        padding: "8px",
-        margin: "4px",
-        background: "lightblue",
-        cursor: "move",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        textAlign: "center",
+        opacity: isDragging ? 0.4 : 1,
+        height: "50px",
+        width: "50px",
+        border: "1px solid rgba(0, 0, 0, 0.2)",
+        borderRadius: "8px",
+        margin: "4px",
+        cursor: "move",
       }}
-    >
+    > 
       {name}
     </div>
   )
