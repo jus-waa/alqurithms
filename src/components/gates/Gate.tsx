@@ -2,13 +2,14 @@ import { useDrag } from 'react-dnd';
 
 interface GateProps{
   name: string;
+  description: string;
   type: string;
 }
 
-const Gate = ( {name, type }: GateProps) => {
+const Gate = ( {name, description, type }: GateProps) => {
   const [{isDragging}, dragRef] = useDrag(() => ({
     type: "gate",
-    item: {name, type},
+    item: {name, description, type},
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     })
