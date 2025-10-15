@@ -1,39 +1,34 @@
-import { useDrag } from 'react-dnd';
+import { useDraggable } from "@dnd-kit/core";
 
-interface GateProps{
+interface GateProps {
+  id?: number;
   name: string;
-  description: string;
-  type: string;
 }
 
-const Gate = ( {name, description, type }: GateProps) => {
-  const [{isDragging}, dragRef] = useDrag(() => ({
-    type: "gate",
-    item: {name, description, type},
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    })
-  }))
+const Gate = ({id, name}: GateProps) => {
+  const {attributes, listeners, setNodeRef, transform} = useDraggable({ id });
+  const style = {
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+    : undefined,
+    display: "flex",
+    justifyContent: "center",
+    border: "1px solid rgba(0, 0, 0, 0.2)",
+    borderRadius: "8px",
+    padding: "4px",
+    height: "35px",
+    width: "35px",
+    cursor: "pointer",
+  };
 
   return (
-    <div  
-      ref={dragRef}
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        opacity: isDragging ? 0.4 : 1,
-        height: "50px",
-        width: "50px",
-        border: "1px solid rgba(0, 0, 0, 0.2)",
-        borderRadius: "8px",
-        margin: "4px",
-        cursor: "move",
-      }}
-    > 
-      {name}
-    </div>
-  )
+    <>
+      <div 
+        ref={setNodeRef} 
+        style={style} {...listeners} {...attributes}> 
+        {name}
+      </div>
+    </>
+  );
 }
 
 export default Gate
