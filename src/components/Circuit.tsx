@@ -2,6 +2,7 @@ import { useState } from "react"
 import { DndContext } from '@dnd-kit/core'
 import Line from "./Line"
 import Gate from '../components/gates/Gate'
+import HadamardGate from "./gates/HadamardGate"
 
 const Circuit = () => {
   const [slots, setSlots] = useState<Record<string, string[]>> ({
@@ -18,15 +19,44 @@ const Circuit = () => {
     { id: "line-4", name: "q3" },
   ];
 
-  function handleDragEnd(event: any) {
+    function handleDragEnd(event) {
     const { active, over } = event;
     if (!over) return;
+
+    setSlots((prev) => {
+      let qubitLine: string | null = null;
+      
+      // checks if gate is already in circuit
+      for ( const line in prev) {
+        if (prev[line].includes(active.id)) {
+          qubitLine = line;
+          break; 
+        }
+      }
+
+      // check if its a new instance or existing
+      const isExisting = !!qubitLine;
+      const instanceId = isExisting ? active.id : `${active.id}-${Math.random().toString(36).slice(2, 9)}`;
     
-    setSlots((prev) => ({
-      ...prev,
-      [over.id]: [...prev[over.id], active.id], 
-    }));
-  };
+      // if drop on the same line from the same line do nothing
+      if (qubitLine === over.id && prev[over.id].includes(instanceId)) {
+        return prev;
+      }
+
+      // latest state
+      const updated = { ...prev };
+
+      // check if gate exist then remove from the old line
+      if (isExisting && qubitLine) {
+        updated[qubitLine] = updated[qubitLine].filter((id) => id !== instanceId); 
+      }
+      // add to the new line if its still not there
+      if (!updated[over.id].includes(instanceId)) {
+        updated[over.id] = [...updated[over.id], instanceId];
+      }
+      return updated;
+    });
+  }
 
   return (
     <>
@@ -37,7 +67,7 @@ const Circuit = () => {
             <div className="text-center border border-black/20 p-6 rounded-lg mb-6">Gates</div>
             {/* List of gates */}
             <div className="border border-black/20 rounded-lg p-4 h-48 w-48">
-              <Gate id="H" name="H"></Gate>
+              <HadamardGate id="Hadamard" name="H"/>
             </div>
           </div>
           {/* Qubit Line */}
@@ -45,9 +75,9 @@ const Circuit = () => {
             <h2 className="mb-2 ml-2">Quantum Circuit</h2>
             {lines.map((line) => (
               <Line key={line.id} id={line.id} name={line.name}>
-                {slots[line.id].map((gateId, i) => (
-                  <Gate key={gateId + i} id={gateId + i} name={gateId} />
-                ))} 
+                {slots[line.id].map((gateId) => (
+                  <Gate key={gateId} id={gateId} name={gateId}/>
+                ))}
               </Line>
             ))}
           </div>

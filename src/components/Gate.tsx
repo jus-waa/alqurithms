@@ -1,12 +1,14 @@
 import { useDraggable } from "@dnd-kit/core";
 
 interface GateProps {
-  id?: number;
+  id: string;
   name: string;
 }
 
 const Gate = ({id, name}: GateProps) => {
-  const {attributes, listeners, setNodeRef, transform} = useDraggable({ id });
+  const {attributes, listeners, setNodeRef, transform} = useDraggable({ 
+    id,
+  });
   const style = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
     : undefined,
@@ -25,7 +27,7 @@ const Gate = ({id, name}: GateProps) => {
       <div 
         ref={setNodeRef} 
         style={style} {...listeners} {...attributes}> 
-        {name}
+        <span>{name}</span>
       </div>
     </>
   );

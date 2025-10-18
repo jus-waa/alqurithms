@@ -1,9 +1,9 @@
 import { useDroppable } from "@dnd-kit/core";
 
 interface GateProps {
-  id?: number;
-  name?: string;
-  children?: React.ReactNode;
+  id: string;
+  name: string;
+  children: React.ReactNode;
 }
 
 const Line = ( {id, name, children}:GateProps ) => {
