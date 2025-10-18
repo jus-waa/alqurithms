@@ -76,7 +76,7 @@ const Circuit = () => {
             {lines.map((line) => (
               <Line key={line.id} id={line.id} name={line.name}>
                 {slots[line.id].map((gateId) => (
-                  <Gate key={gateId} id={gateId} name={gateId}/>
+                  <Gate key={gateId} id={gateId} name={gateId.split("-")[0]}/>
                 ))}
               </Line>
             ))}
