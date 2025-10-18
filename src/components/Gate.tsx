@@ -19,7 +19,7 @@ const Gate = ({id, name}: GateProps) => {
     padding: "4px",
     height: "35px",
     width: "35px",
-    cursor: "pointer",
+    cursor: "grab",
   };
 
   return (
@@ -27,7 +27,7 @@ const Gate = ({id, name}: GateProps) => {
       <div 
         ref={setNodeRef} 
         style={style} {...listeners} {...attributes}> 
-        <span>{name}</span>
+        {name}
       </div>
     </>
   );

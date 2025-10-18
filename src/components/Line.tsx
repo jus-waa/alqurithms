@@ -25,8 +25,7 @@ const Line = ( {id, name, children}:GateProps ) => {
       <div className="flex flex-col m-2">
       <div ref={setNodeRef} style={style}>
         <span className="mr-2">{name}</span>
-        {children}
-      </div>
+        <div className="flex gap-2">{children}</div>      </div>
     </div>
     </>
   )

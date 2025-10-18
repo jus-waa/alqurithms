@@ -1,8 +1,7 @@
 import { useState } from "react"
-import { DndContext } from '@dnd-kit/core'
+import { DndContext} from '@dnd-kit/core'
 import Line from "./Line"
-import Gate from '../components/gates/Gate'
-import HadamardGate from "./gates/HadamardGate"
+import Gate from './Gate'
 
 const Circuit = () => {
   const [slots, setSlots] = useState<Record<string, string[]>> ({
@@ -19,35 +18,36 @@ const Circuit = () => {
     { id: "line-4", name: "q3" },
   ];
 
-    function handleDragEnd(event) {
+  function handleDragEnd(event) {
     const { active, over } = event;
-    if (!over) return;
 
     setSlots((prev) => {
       let qubitLine: string | null = null;
-      
       // checks if gate is already in circuit
-      for ( const line in prev) {
+      for (const line in prev) {
         if (prev[line].includes(active.id)) {
           qubitLine = line;
           break; 
         }
       }
-
       // check if its a new instance or existing
       const isExisting = !!qubitLine;
       const instanceId = isExisting ? active.id : `${active.id}-${Math.random().toString(36).slice(2, 9)}`;
-    
+      // latest state
+      const updated = { ...prev };
+      // if dropped outside
+      if (!over) {
+        if(qubitLine && updated[qubitLine]) {
+          updated[qubitLine] = updated[qubitLine].filter((id) => id !== instanceId); 
+        }
+        return updated;
+      }
       // if drop on the same line from the same line do nothing
       if (qubitLine === over.id && prev[over.id].includes(instanceId)) {
         return prev;
       }
-
-      // latest state
-      const updated = { ...prev };
-
       // check if gate exist then remove from the old line
-      if (isExisting && qubitLine) {
+      if (isExisting && qubitLine && updated[qubitLine]) {
         updated[qubitLine] = updated[qubitLine].filter((id) => id !== instanceId); 
       }
       // add to the new line if its still not there
@@ -67,7 +67,7 @@ const Circuit = () => {
             <div className="text-center border border-black/20 p-6 rounded-lg mb-6">Gates</div>
             {/* List of gates */}
             <div className="border border-black/20 rounded-lg p-4 h-48 w-48">
-              <HadamardGate id="Hadamard" name="H"/>
+              <Gate id="H" name="H"/>
             </div>
           </div>
           {/* Qubit Line */}
