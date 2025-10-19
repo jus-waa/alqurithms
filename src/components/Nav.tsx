@@ -4,7 +4,7 @@ const Nav = () => {
   return (
     <nav className="flex items-center border-b border-black/20 h-16 px-6">
       {/* Logo / Brand */}
-      <div className="text-xl font-semibold">
+      <div className="text-lg font-semibold">
         Alqurithms
       </div>
     </nav>

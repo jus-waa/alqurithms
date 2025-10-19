@@ -17,14 +17,14 @@ const Line = ( {id, name, children}:GateProps ) => {
     borderRadius: "8px",
     padding: "4px",
     height: "50px",
-    width: "550px",
+    width: "700px",
   }
 
   return (
     <>
       <div className="flex flex-col m-2">
       <div ref={setNodeRef} style={style}>
-        <span className="mr-2">{name}</span>
+        <span className="m-2">{name}</span>
         <div className="flex gap-2">{children}</div>      </div>
     </div>
     </>

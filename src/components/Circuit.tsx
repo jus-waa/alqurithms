@@ -60,30 +60,31 @@ const Circuit = () => {
 
   return (
     <>
-      <div className="flex gap-6">
-        <DndContext onDragEnd={handleDragEnd}>
-          {/* Gates */}
-          <div className="border border-black/20 p-6 rounded-lg h-90 w-90">
-            <div className="text-center border border-black/20 p-6 rounded-lg mb-6">Gates</div>
-            {/* List of gates */}
-            <div className="border border-black/20 rounded-lg p-4 h-48 w-48">
-              <Gate id="H" name="H"/>
-            </div>
+      <DndContext onDragEnd={handleDragEnd}>
+        {/* Gates */}
+        <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center">
+          <div className="pl-2">Gates</div>
+          {/* List of gates */}
+          <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
+            <Gate id="H" name="H"/>
+            <Gate id="Y" name="Y"/>
+            <Gate id="X" name="X"/>
           </div>
-          {/* Qubit Line */}
-          <div className="border border-black/20 p-6 rounded-lg ">
-            <h2 className="mb-2 ml-2">Quantum Circuit</h2>
+        </div>
+        {/* Qubit Line */}
+        <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center">
+          <h2 className="pl-2">Quantum Circuit</h2>
+          <div>
             {lines.map((line) => (
-              <Line key={line.id} id={line.id} name={line.name}>
-                {slots[line.id].map((gateId) => (
-                  <Gate key={gateId} id={gateId} name={gateId.split("-")[0]}/>
-                ))}
-              </Line>
-            ))}
+            <Line key={line.id} id={line.id} name={line.name}>
+              {slots[line.id].map((gateId) => (
+                <Gate key={gateId} id={gateId} name={gateId.split("-")[0]}/>
+              ))}
+            </Line>
+          ))}
           </div>
-        </DndContext>
-      </div>
-      
+        </div>
+      </DndContext>
     </>
   )
 }
