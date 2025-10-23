@@ -1,9 +1,14 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { DndContext} from '@dnd-kit/core'
 import Line from "./Line"
 import Gate from './Gate'
+import Probabilities from "./Probabilities";
+import { ket0000 } from "../engine/Qubit";
+import { applyHadamardToQubit } from "../engine/gates/Hadamard";
+import type { Qubit } from "../engine/Qubit";
 
 const Circuit = () => {
+  const [state, setState] = useState(ket0000) //meaning start at 0000
   const [slots, setSlots] = useState<Record<string, string[]>> ({
     "line-1": [],
     "line-2": [],
@@ -54,8 +59,35 @@ const Circuit = () => {
       if (!updated[over.id].includes(instanceId)) {
         updated[over.id] = [...updated[over.id], instanceId];
       }
+      
       return updated;
     });
+  }
+
+  useEffect(() => {
+    executeCircuit();
+  }, [slots])
+
+  function executeCircuit() {
+    let currentState: Qubit = [...ket0000];
+    // get max no. gates on any line
+    const maxGates = Math.max(...Object.values(slots).map(gates => gates.length));
+
+    // execute gates column by column
+    for (let col = 0; col < maxGates; col++) {
+      lines.forEach((line, lineIndex) => {
+        const gatesOnLine = slots[line.id];
+        if (gatesOnLine[col]) {
+          const gateType = gatesOnLine[col].split("-")[0];
+          // hadamard 
+          if (gateType === "H") {
+            currentState = applyHadamardToQubit(currentState, lineIndex);
+          }
+          // other gates
+        }
+      });
+    }
+    setState(currentState)
   }
 
   return (
@@ -63,17 +95,16 @@ const Circuit = () => {
       <DndContext onDragEnd={handleDragEnd}>
         {/* Gates */}
         <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center">
-          <div className="pl-2">Gates</div>
+          <h3 className="pl-2">Gates</h3>
           {/* List of gates */}
           <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
             <Gate id="H" name="H"/>
-            <Gate id="Y" name="Y"/>
             <Gate id="X" name="X"/>
           </div>
         </div>
         {/* Qubit Line */}
         <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center">
-          <h2 className="pl-2">Quantum Circuit</h2>
+          <h3 className="pl-2">Quantum Circuit</h3>
           <div>
             {lines.map((line) => (
             <Line key={line.id} id={line.id} name={line.name}>
@@ -83,6 +114,9 @@ const Circuit = () => {
             </Line>
           ))}
           </div>
+        </div>
+        <div>
+          <Probabilities state={state}/>
         </div>
       </DndContext>
     </>
