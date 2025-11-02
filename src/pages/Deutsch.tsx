@@ -1,6 +1,6 @@
 import Layout from '../components/Layout'
 import Circuit from '../components/Circuit'
-const DeutschJozsa = () => {
+const Deutsch = () => {
   return (
     <Layout>
       <div className='grid grid-cols-[1fr_2fr_2fr] gap-6 h-80'>
@@ -10,4 +10,4 @@ const DeutschJozsa = () => {
   )
 }
 
-export default DeutschJozsa
+export default Deutsch

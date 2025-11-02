@@ -6,6 +6,7 @@ import Probabilities from "./Probabilities";
 import { ket0000 } from "../engine/Qubit";
 import { applyHadamardToQubit } from "../engine/gates/Hadamard";
 import type { Qubit } from "../engine/Qubit";
+import { applyPauliXToQubit } from "../engine/gates/PauliX";
 
 const Circuit = () => {
   const [state, setState] = useState(ket0000) //meaning start at 0000
@@ -64,10 +65,12 @@ const Circuit = () => {
     });
   }
 
+  // execute everytime a gate is dropped in the slot
   useEffect(() => {
     executeCircuit();
   }, [slots])
 
+  // handles the output of gates
   function executeCircuit() {
     let currentState: Qubit = [...ket0000];
     // get max no. gates on any line
@@ -82,6 +85,11 @@ const Circuit = () => {
           // hadamard 
           if (gateType === "H") {
             currentState = applyHadamardToQubit(currentState, lineIndex);
+            console.log('Current state: ', currentState);
+          }
+          else if (gateType === "X") {
+            currentState = applyPauliXToQubit(currentState, lineIndex);
+            console.log('Current state: ', currentState);
           }
           // other gates
         }
