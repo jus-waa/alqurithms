@@ -12,8 +12,8 @@ export const ket0000: Qubit = [
   0, 0, 0, 0   
 ];
 // matrix-vector multiplication
-export function applyGate(matrix: number[][], state: Qubit): Qubit { //Qubit as return type
-  const [a, b] = state; //destructure
+export function applyGate(matrix: number[][], state: Qubit): Qubit {
+  const [a, b] = state;
   return[
       matrix[0][0] * a + matrix[0][1] * b,
       matrix[1][0] * a + matrix[1][1] * b

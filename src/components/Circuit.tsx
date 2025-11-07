@@ -102,7 +102,7 @@ const Circuit = () => {
     <>
       <DndContext onDragEnd={handleDragEnd}>
         {/* Gates */}
-        <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center">
+        <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white">
           <h3 className="pl-2">Gates</h3>
           {/* List of gates */}
           <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
@@ -111,7 +111,7 @@ const Circuit = () => {
           </div>
         </div>
         {/* Qubit Line */}
-        <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center">
+        <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white">
           <h3 className="pl-2">Quantum Circuit</h3>
           <div>
             {lines.map((line) => (

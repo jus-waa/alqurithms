@@ -4,9 +4,9 @@ import Layout from '../components/Layout'
 const Home = () => {
   return (
     <Layout>
-      <section className="flex flex-1 flex-col justify-center items-center text-center border border-black/20 p-6 rounded-lg">
+      <section className="flex flex-1 flex-col justify-center items-center text-center bg-white border border-black/20 p-6 rounded-lg">
         <h1 className="text-3xl font-bold mb-4">
-          Foundational Quantum Algorithms.
+          Discover. Trace. Understand Quantum Logic.
         </h1>
         <p className="font-normal max-w-2xl mb-4">
           Explore the foundational quantum algorithms through interactive visuals. Run simulations, build circuits, and understand algorithms with hands-on guidance.

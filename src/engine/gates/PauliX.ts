@@ -13,9 +13,10 @@ export function applyPauliXToQubit(state: Qubit, targetQubit: number): Qubit {
   // basically magstart similar to hadamard since check 0 or 1 then flip 
 
   for (let i = 0; i < n; i++) {
-     const bit = (i >> targetQubit) & 1;
-     const flippedIndex = i ^ (1 << targetQubit);
+    const bit = (i >> targetQubit) & 1;
+    const flippedIndex = i ^ (1 << targetQubit);
 
+    // just flip then assign value 
     newState[flippedIndex] = state[i];
     console.log('1:', bit);
   }
