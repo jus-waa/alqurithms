@@ -1,12 +1,12 @@
 import { useDroppable } from "@dnd-kit/core";
 
-interface GateProps {
+interface LineProps {
   id: string;
   name: string;
   children: React.ReactNode;
 }
 
-const Line = ( {id, name, children}:GateProps ) => {
+const Line = ( {id, name, children}: LineProps ) => {
   const {isOver, setNodeRef} = useDroppable({ id });
   const style = {
     opacity: isOver ? '0.4' : 1,
@@ -23,10 +23,11 @@ const Line = ( {id, name, children}:GateProps ) => {
   return (
     <>
       <div className="flex flex-col m-2">
-      <div ref={setNodeRef} style={style}>
-        <span className="m-2">{name}</span>
-        <div className="flex gap-2">{children}</div>      </div>
-    </div>
+        <div ref={setNodeRef} style={style}>
+          <span className="m-2">{name}</span>
+          <div className="flex gap-2">{children}</div>      
+        </div>
+      </div>
     </>
   )
 }
