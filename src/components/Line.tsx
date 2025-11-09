@@ -10,11 +10,10 @@ const Line = ( {id, name, children}: LineProps ) => {
   const {isOver, setNodeRef} = useDroppable({ id });
   const style = {
     opacity: isOver ? '0.4' : 1,
+    position: "relative",
     display: "flex",
     alignItems: "center",
     gap: "6px",
-    border: "1px solid rgba(0, 0, 0, 0.2)",
-    borderRadius: "8px",
     padding: "4px",
     height: "50px",
     width: "700px",
@@ -24,8 +23,14 @@ const Line = ( {id, name, children}: LineProps ) => {
     <>
       <div className="flex flex-col m-2">
         <div ref={setNodeRef} style={style}>
+          {/* q0 q1 q2 q3 */}
           <span className="m-2">{name}</span>
-          <div className="flex gap-2">{children}</div>      
+          {/* line */}
+          <div className="absolute border-t border-black/20 left-10 w-[93%]  z-0" />
+          {/* ocntent */}
+          <div className="flex gap-2">
+            {children}
+          </div>      
         </div>
       </div>
     </>

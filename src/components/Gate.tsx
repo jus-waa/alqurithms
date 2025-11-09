@@ -14,12 +14,14 @@ const Gate = ({id, name}: GateProps) => {
     : undefined,
     display: "flex",
     justifyContent: "center",
+    backgroundColor: "white",
     border: "1px solid rgba(0, 0, 0, 0.2)",
     borderRadius: "8px",
     padding: "4px",
     height: "35px",
     width: "35px",
     cursor: "grab",
+    zIndex: "10",
   };
 
   return (
