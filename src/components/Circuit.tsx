@@ -261,11 +261,11 @@ const Circuit = () => {
           </div>
         </div>
         {/* Lower part */}
-        <div className="grid flex-1 grid-cols-[1.5fr_2.8fr_1.5fr] gap-2">
+        <div className="grid flex-1 grid-cols-[1fr_3.5fr_1fr] gap-2">
           <DndContext onDragEnd={handleDragEnd} >
             {/* Gates */}
-            <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white w-full h-full">
-              <h3 className="pl-2">Gates</h3>
+            <div className="flex flex-col gap-4 p-4 border border-black/20 rounded-lg  bg-white w-full h-full">
+              <h3 className="pl-2 h-8">Gates</h3>
               {/* List of gates */}
               <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
                 <Gate id="H" name="H"/>
@@ -275,7 +275,7 @@ const Circuit = () => {
             </div>
             {/* Quantum Circuit */}
             <div className="grid gap-2">
-              <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white">
+              <div className="grid gap-4 p-4 border border-black/20 rounded-lg bg-white">
                 <h3 className="pl-2">Quantum Circuit</h3>
                 <div>
                   {lines.map((line) => (
@@ -308,7 +308,6 @@ const Circuit = () => {
                 Player
               </div>
             </div>
-            
             {/* Temporary to fillup space (OpenQASM Code Viewer) */}
             {/* not necessarily needed inside dndcontext? ata> */}
             <div className="w-full">

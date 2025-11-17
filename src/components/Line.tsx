@@ -16,17 +16,17 @@ const Line = ( {id, name, children}: LineProps ) => {
     gap: "6px",
     padding: "4px",
     height: "50px",
-    width: "700px",
+    width: "auto",
   }
 
   return (
     <>
-      <div className="flex flex-col m-2">
+      <div className="flex flex-col m-2 px-6">
         <div ref={setNodeRef} style={style}>
           {/* q0 q1 q2 q3 */}
-          <span className="m-2">{name}</span>
+          <span className="p-3 bg-white z-10">{name}</span>
           {/* line */}
-          <div className="absolute border-t border-black/20 left-10 w-[93%]  z-0" />
+          <div className="absolute border-t border-black/20 w-full z-0" />
           {/* ocntent */}
           <div className="flex gap-2">
             {children}
