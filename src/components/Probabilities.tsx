@@ -33,7 +33,7 @@ const Probabilities = ({state} : {state: Qubit}) => {
 
   return (
     <>
-      <div className="border border-black/20 p-6 rounded-lg bg-white">
+      <div className="border border-black/20 p-6 rounded-lg bg-white h-full">
         <h3>Probabilities</h3>
         <Bar 
           options={options}
