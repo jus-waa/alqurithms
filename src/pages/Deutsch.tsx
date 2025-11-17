@@ -3,7 +3,7 @@ import Circuit from '../components/Circuit'
 const Deutsch = () => {
   return (
     <Layout>
-      <div className='grid grid-cols-[1fr_2fr_2fr] gap-6 h-80'>
+      <div className='h-full w-full'>
         <Circuit/>
       </div>
     </Layout>

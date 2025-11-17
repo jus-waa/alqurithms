@@ -4,7 +4,7 @@ import Layout from '../components/Layout'
 const Home = () => {
   return (
     <Layout>
-      <section className="flex flex-1 flex-col justify-center items-center text-center bg-white border border-black/20 p-6 rounded-lg">
+      <section className="flex flex-col justify-center items-center text-center bg-white border border-black/20 p-6 h-full rounded-lg">
         <h1 className="text-3xl font-bold mb-4">
           Discover. Trace. Understand Quantum Logic.
         </h1>
@@ -15,7 +15,6 @@ const Home = () => {
           to="/algorithms"
           className='border border-black/20 px-4 py-2 rounded-lg cursor-pointer'
         >
-            
           Getting Started
         </Link>
       </section>

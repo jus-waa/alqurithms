@@ -16,7 +16,6 @@ interface Metadata {
   target: number;
 }
 
-
 const Circuit = () => {
   const [state, setState] = useState(ket0000) //meaning start at 0000
   const [slots, setSlots] = useState<Record<string, string[]>> ({
@@ -242,18 +241,30 @@ const Circuit = () => {
   }, [slots, multiSlots])
 
   return (
-    <div className="h-screen w-screen flex flex-col gap-6 border-2 border-red-500 p-6">
-      {/* Upper part */}
-      <div className="grid flex-1 grid-cols-[2.3fr_2fr_1.5fr] gap-2">
-        <div className="w-full">
-          <Probabilities state={state}/>
+      <div className="flex flex-col h-full w-full gap-2">
+        {/* Upper part */}
+        <div className="grid flex-1 grid-cols-[2.3fr_2fr_1.5fr] gap-2">
+          <div className="w-full">
+            <Probabilities state={state}/>
+          </div>
+          <div className="w-full">
+            <BlochSphere />
+          </div>
+          {/* Temporary to fillup space (Explanation Box) */}
+          <div className="w-full">
+              <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white h-full">
+                <h3 className="pl-2">Explanation Box</h3>
+                {/* List of gates */}
+                <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
+                </div>
+              </div>
+          </div>
         </div>
-        <div className="w-full">
-          <BlochSphere />
-        </div>
-        {/* Temporary to fillup space (Explanation Box) */}
-        <div className="w-full">
-            <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white h-full">
+        {/* Lower part */}
+        <div className="grid flex-1 grid-cols-[1.5fr_2.8fr_1.5fr] gap-2">
+          <DndContext onDragEnd={handleDragEnd} >
+            {/* Gates */}
+            <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white w-full h-full">
               <h3 className="pl-2">Gates</h3>
               {/* List of gates */}
               <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
@@ -262,76 +273,66 @@ const Circuit = () => {
                 <Gate id="CNOT" name="CNOT"/>
               </div>
             </div>
-        </div>
-      </div>
-      {/* Lower part */}
-      <div className="grid flex-1 grid-cols-[1.5fr_2.8fr_1.5fr] gap-2">
-        <DndContext onDragEnd={handleDragEnd} >
-          {/* Gates */}
-          <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white w-full h-full">
-            <h3 className="pl-2">Gates</h3>
-            {/* List of gates */}
-            <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
-              <Gate id="H" name="H"/>
-              <Gate id="X" name="X"/>
-              <Gate id="CNOT" name="CNOT"/>
+            {/* Quantum Circuit */}
+            <div className="grid gap-2">
+              <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white">
+                <h3 className="pl-2">Quantum Circuit</h3>
+                <div>
+                  {lines.map((line) => (
+                  <Line key={line.id} id={line.id} name={line.name}>
+                    {slots[line.id].map((gateId) => {
+                      const gateType = gateId.split("-")[0];
+                      const metadata = multiSlots[gateId];
+                      let displayName = gateType;
+                      if (gateType === "CNOT" && metadata) {
+                        const currentLineIndex = lines.findIndex(l => l.id === line.id);
+                        if (currentLineIndex === metadata.control) {
+                          displayName = ".";
+                        } else {
+                          displayName = "⊕";
+                        }
+                      }
+                      return (
+                        <Gate 
+                          key={gateId} 
+                          id={gateId} 
+                          name={displayName}
+                        />
+                      );
+                    })}
+                  </Line>
+                ))}
+                </div>
+              </div>
+              <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white">
+                Player
+              </div>
             </div>
-          </div>
-          {/* Qubit Line */}
-          <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white w-full h-full">
-            <h3 className="pl-2">Quantum Circuit</h3>
+            
+            {/* Temporary to fillup space (OpenQASM Code Viewer) */}
+            {/* not necessarily needed inside dndcontext? ata> */}
+            <div className="w-full">
+              <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white h-full">
+                <h3 className="pl-2">OpenQASM 3.0</h3>
+                {/* List of gates */}
+                <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
+
+                </div>
+              </div>
+            </div>
+          </DndContext>
+          {showModal && pending && (
             <div>
-              {lines.map((line) => (
-              <Line key={line.id} id={line.id} name={line.name}>
-                {slots[line.id].map((gateId) => {
-                  const gateType = gateId.split("-")[0];
-                  const metadata = multiSlots[gateId];
-                  let displayName = gateType;
-                  if (gateType === "CNOT" && metadata) {
-                    const currentLineIndex = lines.findIndex(l => l.id === line.id);
-                    if (currentLineIndex === metadata.control) {
-                      displayName = ".";
-                    } else {
-                      displayName = "⊕";
-                    }
-                  }
-                  return (
-                    <Gate 
-                      key={gateId} 
-                      id={gateId} 
-                      name={displayName}
-                    />
-                  );
-                })}
-              </Line>
-            ))}
+              <MultiQubitModal
+                onClose={handleModalCancel}
+                onConfirm={handleMultiQubitConfirm}
+                lines={lines}
+                currentLine={pending?.lineIndex}
+              />
             </div>
-          </div>
-        </DndContext>
-        {showModal && pending && (
-          <div>
-            <MultiQubitModal
-              onClose={handleModalCancel}
-              onConfirm={handleMultiQubitConfirm}
-              lines={lines}
-              currentLine={pending?.lineIndex}
-            />
-          </div>
-        )}
-        {/* Temporary to fillup space (Explanation Box) */}
-        <div className="w-full">
-          <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white h-full">
-            <h3 className="pl-2">Gates</h3>
-            {/* List of gates */}
-            <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
-              <Gate id="H" name="H"/>
-              <Gate id="X" name="X"/>
-              <Gate id="CNOT" name="CNOT"/>
-            </div>
-          </div>
+          )}
         </div>
       </div>
-    </div>
   )
 }
 export default Circuit
