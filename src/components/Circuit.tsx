@@ -10,6 +10,7 @@ import { applyPauliXToQubit } from "../engine/gates/PauliX";
 import { applyCNOTtoQubit } from "../engine/gates/CNOT";
 import MultiQubitModal from "./MultiQubitModal";
 import BlochSphere from "./BlochSphere";
+import { applyPauliIToQubit } from "../engine/gates/PauliI";
 
 interface Metadata {
   control: number;
@@ -221,12 +222,16 @@ const Circuit = () => {
             currentState = applyPauliXToQubit(currentState, lineIndex);
             console.log('Current state: ', currentState);
           }
-           else if (gateType === "CNOT") {
+          else if (gateType === "CNOT") {
             const metadata = multiSlots[gateId];
             if (metadata) {
               currentState = applyCNOTtoQubit(currentState, metadata.control, metadata.target);
               console.log(`CNOT gate (C:${metadata.control}, T:${metadata.target}) - Current state: `, currentState);
             }
+          }
+          else if (gateType === "I") {
+            currentState = applyPauliIToQubit(currentState, lineIndex);
+            console.log('Current state: ', currentState);
           }
           // other gates
         }
@@ -271,6 +276,7 @@ const Circuit = () => {
                 <Gate id="H" name="H"/>
                 <Gate id="X" name="X"/>
                 <Gate id="CNOT" name="CNOT"/>
+                <Gate id="I" name="I"/>
               </div>
             </div>
             {/* Quantum Circuit */}

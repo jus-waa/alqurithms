@@ -10,19 +10,10 @@ const Algorithms = () => {
             Deutsch Algorithm
           </Link>
           <Link to="/deutsch" className='flex justify-center items-end text-center pb-8 border border-black/20 rounded-lg bg-white'>
-            Deutsch Algorithm
+            Deutsch-Jozsa Algorithm
           </Link>
           <Link to="/deutsch" className='flex justify-center items-end text-center pb-8 border border-black/20 rounded-lg bg-white'>
-            Deutsch Algorithm
-          </Link>
-          <Link to="/deutsch" className='flex justify-center items-end text-center pb-8 border border-black/20 rounded-lg bg-white'>
-            Deutsch Algorithm
-          </Link>
-          <Link to="/deutsch" className='flex justify-center items-end text-center pb-8 border border-black/20 rounded-lg bg-white'>
-            Deutsch Algorithm
-          </Link>
-          <Link to="/deutsch" className='flex justify-center items-end text-center pb-8 border border-black/20 rounded-lg bg-white'>
-            Deutsch Algorithm
+            Bernstein-Vazirani Algorithm
           </Link>
         </div>
       </div>
