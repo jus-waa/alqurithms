@@ -11,6 +11,7 @@ import { applyCNOTtoQubit } from "../engine/gates/CNOT";
 import MultiQubitModal from "./MultiQubitModal";
 import BlochSphere from "./BlochSphere";
 import { applyPauliIToQubit } from "../engine/gates/PauliI";
+import { applyPauliZToQubit } from "../engine/gates/PauliZ";
 
 interface Metadata {
   control: number;
@@ -213,13 +214,20 @@ const Circuit = () => {
         if (gatesOnLine[col]) {
           const gateId = gatesOnLine[col]
           const gateType = gatesOnLine[col].split("-")[0];
-          // hadamard 
           if (gateType === "H") {
             currentState = applyHadamardToQubit(currentState, lineIndex);
             console.log('Current state: ', currentState);
           }
+          else if (gateType === "I") {
+            currentState = applyPauliIToQubit(currentState, lineIndex);
+            console.log('Current state: ', currentState);
+          }
           else if (gateType === "X") {
             currentState = applyPauliXToQubit(currentState, lineIndex);
+            console.log('Current state: ', currentState);
+          }
+          else if (gateType === "Z") {
+            currentState = applyPauliZToQubit(currentState, lineIndex);
             console.log('Current state: ', currentState);
           }
           else if (gateType === "CNOT") {
@@ -228,10 +236,6 @@ const Circuit = () => {
               currentState = applyCNOTtoQubit(currentState, metadata.control, metadata.target);
               console.log(`CNOT gate (C:${metadata.control}, T:${metadata.target}) - Current state: `, currentState);
             }
-          }
-          else if (gateType === "I") {
-            currentState = applyPauliIToQubit(currentState, lineIndex);
-            console.log('Current state: ', currentState);
           }
           // other gates
         }
@@ -274,9 +278,10 @@ const Circuit = () => {
               {/* List of gates */}
               <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
                 <Gate id="H" name="H"/>
-                <Gate id="X" name="X"/>
-                <Gate id="CNOT" name="CNOT"/>
                 <Gate id="I" name="I"/>
+                <Gate id="X" name="X"/>
+                <Gate id="Z" name="Z"/>
+                <Gate id="CNOT" name="CNOT"/>
               </div>
             </div>
             {/* Quantum Circuit */}
