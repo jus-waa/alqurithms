@@ -11,6 +11,14 @@ export const ket0000: Qubit = [
   0, 0, 0, 0, 
   0, 0, 0, 0   
 ];
+// 2^n amp
+export function zeroState(n: number): Qubit {
+  const size = 2**n;
+  const state: Qubit = Array(size).fill(0);
+  state[0] = 1;
+  return state;
+}
+
 // matrix-vector multiplication
 export function applyGate(matrix: number[][], state: Qubit): Qubit {
   const [a, b] = state;

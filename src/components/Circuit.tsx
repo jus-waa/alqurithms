@@ -1,41 +1,60 @@
 import { useEffect, useState } from "react"
 import { DndContext} from '@dnd-kit/core'
+
 import Line from "./Line"
 import Gate from './Gate'
 import Probabilities from "./Probabilities";
-import { ket0000 } from "../engine/Qubit";
-import { applyHadamardToQubit } from "../engine/gates/Hadamard";
-import type { Qubit } from "../engine/Qubit";
-import { applyPauliXToQubit } from "../engine/gates/PauliX";
-import { applyCNOTtoQubit } from "../engine/gates/CNOT";
 import MultiQubitModal from "./MultiQubitModal";
 import BlochSphere from "./BlochSphere";
+
+import { applyHadamardToQubit } from "../engine/gates/Hadamard";
+import { applyPauliXToQubit } from "../engine/gates/PauliX";
+import { applyCNOTtoQubit } from "../engine/gates/CNOT";
 import { applyPauliIToQubit } from "../engine/gates/PauliI";
 import { applyPauliZToQubit } from "../engine/gates/PauliZ";
+
+import type { CircuitConfig } from "../engine/types/CircuitConfig";
+import type { Qubit } from "../engine/Qubit";
+import { ket0000 } from "../engine/Qubit";
 
 interface Metadata {
   control: number;
   target: number;
 }
 
-const Circuit = () => {
-  const [state, setState] = useState(ket0000) //meaning start at 0000
+interface CircuitProps {
+  config: CircuitConfig
+}
+/*
+Making the circuit generalize:
   const [slots, setSlots] = useState<Record<string, string[]>> ({
     "line-1": [],
     "line-2": [],
     "line-3": [],
     "line-4": [],
   });
-  const [multiSlots, setMultiSlots] = useState<Record<string, Metadata>>({});
-  const [pending, setPending] = useState<{lineId: string, lineIndex: number, instanceId: string} | null>(null);
-  const [showModal, setShowModal] = useState(false);
   const lines = [
     { id: "line-1", name: "q0" },
     { id: "line-2", name: "q1" },
     { id: "line-3", name: "q2" },
     { id: "line-4", name: "q3" },
   ];
-
+*/
+const Circuit = ({config}:CircuitProps) => {
+  const [state, setState] = useState(config.initialState) //e.g. ket0000 = 0000
+  const [slots, setSlots] = useState<Record<string, string[]>> (
+    Object.fromEntries(
+      Array.from({ length: config.qubitCount }, (_, i) => [`line-${i}`, []])
+    )
+  );
+  const [multiSlots, setMultiSlots] = useState<Record<string, Metadata>>({});
+  const [pending, setPending] = useState<{lineId: string, lineIndex: number, instanceId: string} | null>(null);
+  const [showModal, setShowModal] = useState(false);  
+  const lines = Array.from({ length: config.qubitCount }, (_,i) => ({
+    id: `line-${i}`,
+    name: `q${i}`,
+  }));
+  // config.locked is for locking the algo structure for deutsch and bv
   function handleDragEnd(event) {
     const { active, over } = event;
     const gateType = active.id.split("-")[0];
@@ -44,6 +63,7 @@ const Circuit = () => {
     } else {
       handleSingleQubitGates(active, over);
     }
+    if (config.locked) return;
   }
 
   function handleSingleQubitGates(active, over) {
@@ -204,7 +224,7 @@ const Circuit = () => {
   }
 
   function executeCircuit() {
-    let currentState: Qubit = [...ket0000];
+    let currentState: Qubit = [...config.initialState];
     // get max no. gates on any line
     const maxGates = Math.max(...Object.values(slots).map(gates => gates.length));
     // execute gates column by column
@@ -248,6 +268,12 @@ const Circuit = () => {
   useEffect(() => {
     executeCircuit();
   }, [slots, multiSlots])
+  // set circuit preset 
+  useEffect(() => {
+    if(config.presetSlots) {
+      setSlots(config.presetSlots);
+    }
+  }, [config])
 
   return (
       <div className="flex flex-col h-full w-full gap-2">
@@ -275,13 +301,12 @@ const Circuit = () => {
             {/* Gates */}
             <div className="flex flex-col gap-4 p-4 border border-black/20 rounded-lg  bg-white w-full h-full">
               <h3 className="pl-2 h-8">Gates</h3>
-              {/* List of gates */}
+              {/* List of gates 
+              e.g. <Gate id="H" name="H"/> */}
               <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
-                <Gate id="H" name="H"/>
-                <Gate id="I" name="I"/>
-                <Gate id="X" name="X"/>
-                <Gate id="Z" name="Z"/>
-                <Gate id="CNOT" name="CNOT"/>
+                {config.allowedGates.map(g => (
+                  <Gate key={g} id={g} name={g}/>
+                ))}
               </div>
             </div>
             {/* Quantum Circuit */}

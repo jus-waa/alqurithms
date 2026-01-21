@@ -18,16 +18,20 @@ const options = {
   }
 }
 
-const Probabilities = ({state} : {state: Qubit}) => {
-  const prob = state.map((amp: number) => Math.pow(Math.abs(amp), 2) * 100);
+const Probabilities = ({ state } : { state: Qubit }) => {
+  const dimension = state.length;
+  const qubitCount = Math.log2(dimension);
+  const prob = state.map((amp: number) => Math.pow(Math.abs(amp), 2) * 100);  
+  const labels = Array.from({ length:  dimension }, (_, i) => i.toString(2).padStart(qubitCount, "0"));
+
   const data = {
-    labels: ["0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011", "1100", "1101", "1110", "1111"],
+    labels,
     datasets: [{
       label: "Probability (%)",
       data: prob,
-      backgroundColor: Array(16)
-        .fill(0)
-        .map((_, i) => `hsla(${i * 22.5}, 80%, 60%, 0.8)`),
+      backgroundColor: Array.from({ length: dimension }, (_, i) =>
+        `hsla(${(i * 360) / dimension}, 80%, 60%, 0.8)`
+      ),
     }],
   }
 
