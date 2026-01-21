@@ -1,16 +1,13 @@
 import type { Qubit } from '../Qubit';
 
-// pauli-x matrix
 export const pauliXMatrix: number[][] = [
   [0, 1],
   [1, 0]
 ]
-
 /* 
   basically magstart similar to hadamard since check 0 or 1 then flip,
   then just flip then assign value 
 */
-
 export function applyPauliXToQubit(state: Qubit, targetQubit: number): Qubit {
   const n = state.length; 
   const newState: number[] = new Array(n).fill(0)
