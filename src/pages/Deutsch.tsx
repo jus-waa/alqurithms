@@ -1,6 +1,6 @@
 import Layout from '../components/Layout'
 import Circuit from '../components/Circuit'
-import { ket0000, zeroState } from '../engine/Qubit';
+import { zeroState } from '../engine/Qubit';
 import type { CircuitConfig } from '../engine/types/CircuitConfig';
 
 

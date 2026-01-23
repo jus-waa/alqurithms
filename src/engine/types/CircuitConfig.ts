@@ -1,6 +1,6 @@
 import type { Qubit } from "../Qubit";
 
-interface CircuitConfig {
+export interface CircuitConfig {
   algoName: string;
   qubitCount: number;
   initialState: Qubit;

@@ -13,4 +13,4 @@ const Qubit = ( { state }: QubitProps) => {
   )
 }
 
-export default Qubit
+export default Qubit;

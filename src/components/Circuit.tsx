@@ -5,7 +5,7 @@ import Line from "./Line"
 import Gate from './Gate'
 import Probabilities from "./Probabilities";
 import MultiQubitModal from "./MultiQubitModal";
-import BlochSphere from "./BlochSphere";
+import QSphere from "./QSphere";
 
 import { applyHadamardToQubit } from "../engine/gates/Hadamard";
 import { applyPauliXToQubit } from "../engine/gates/PauliX";
@@ -283,7 +283,7 @@ const Circuit = ({config}:CircuitProps) => {
             <Probabilities state={state}/>
           </div>
           <div className="w-full">
-            <BlochSphere />
+            <QSphere state = {state} qubitCount = {config.qubitCount} />
           </div>
           {/* Temporary to fillup space (Explanation Box) */}
           <div className="w-full">
