@@ -4,6 +4,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate} from 'react-router-do
 import Home from './pages/Home.tsx'
 import Algorithms from './pages/Algorithms.tsx'
 import Deutsch from './pages/Deutsch.tsx'
+import DeutschJozsa from './pages/DeutschJozsa.tsx'
+import BernsteinVazirani from './pages/BernsteinVazirani.tsx'
+
 const App = () => {
   return (
     <Router>
@@ -12,6 +15,8 @@ const App = () => {
           <Route path="/home" element={<Home />} />
           <Route path="/algorithms" element={<Algorithms/>} />
           <Route path="/deutsch" element={<Deutsch/>} />
+          <Route path="/deutschJozsa" element={<DeutschJozsa/>} />
+          <Route path="/bernsteinVazirani" element={<BernsteinVazirani/>} />
       </Routes>
     </Router>
   )

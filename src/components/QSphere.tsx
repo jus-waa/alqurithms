@@ -10,7 +10,9 @@ function binomial(n: number, k: number): number {
   }
   return res;
 }
-
+/*
+prob is quantum probabilties
+*/
 const QSphere = ({ state, qubitCount } : {
   state: Qubit 
   qubitCount: number
@@ -21,9 +23,9 @@ const QSphere = ({ state, qubitCount } : {
     if (prob < 1e-6) return null;
     const bitstring = i.toString(2).padStart(qubitCount, "0");
     const weight = bitstring.split("").filter(b => b === "1").length;
-    // Count how many states have this weight
+    // count how many states have this weight
     const count = binomial(qubitCount, weight);
-    // Figure out the index of this state among all states with same weight
+    // figure out the index of this state among all states with same weight
     const sameWeightIndices = [...Array(2 ** qubitCount).keys()]
       .filter(j => {
         const b = j.toString(2).padStart(qubitCount, "0");
@@ -32,7 +34,7 @@ const QSphere = ({ state, qubitCount } : {
     const indexInWeight = sameWeightIndices.indexOf(i);
     const y = radius * (1 - (2 * weight) / qubitCount);
     const rho = Math.sqrt(radius * radius - y * y);
-    // Negate phi to reverse the direction (counterclockwise when viewed from top)
+    // negate phi to reverse the direction (counterclockwise when viewed from top)
     const phi = -(2 * Math.PI * indexInWeight) / count;
     return {
       x: -rho * Math.cos(phi),

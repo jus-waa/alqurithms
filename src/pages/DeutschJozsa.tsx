@@ -3,21 +3,21 @@ import Circuit from '../components/Circuit'
 import { zeroState } from '../engine/Qubit';
 import type { CircuitConfig } from '../engine/types/CircuitConfig';
 
-const deutschConfig: CircuitConfig = {
-  algoName: "Deutsch", 
-  qubitCount: 2,
-  initialState: zeroState(2),
+const deutschJozsaConfig: CircuitConfig = {
+  algoName: "Deutsch-Jozsa", 
+  qubitCount: 4,
+  initialState: zeroState(4),
   allowedGates: ['H', 'I', 'X', 'Z'],
 };
 
-const Deutsch = () => {
+const DeutschJozsa = () => {
   return (
     <Layout>
       <div className='h-full w-full'>
-        <Circuit config={deutschConfig}/>
+        <Circuit config={deutschJozsaConfig}/>
       </div>
     </Layout>
   )
 }
 
-export default Deutsch
+export default DeutschJozsa

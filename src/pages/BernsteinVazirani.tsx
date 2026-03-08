@@ -3,21 +3,21 @@ import Circuit from '../components/Circuit'
 import { zeroState } from '../engine/Qubit';
 import type { CircuitConfig } from '../engine/types/CircuitConfig';
 
-const deutschConfig: CircuitConfig = {
-  algoName: "Deutsch", 
-  qubitCount: 2,
-  initialState: zeroState(2),
+const bernsteinVaziraniConfig: CircuitConfig = {
+  algoName: "Bernstein-Vazirani", 
+  qubitCount: 5,
+  initialState: zeroState(5),
   allowedGates: ['H', 'I', 'X', 'Z'],
 };
 
-const Deutsch = () => {
+const BernsteinVazirani = () => {
   return (
     <Layout>
       <div className='h-full w-full'>
-        <Circuit config={deutschConfig}/>
+        <Circuit config={bernsteinVaziraniConfig}/>
       </div>
     </Layout>
   )
 }
 
-export default Deutsch
+export default BernsteinVazirani

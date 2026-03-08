@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { DndContext} from '@dnd-kit/core'
 
 import Line from "./Line"
@@ -12,7 +12,7 @@ import { applyPauliXToQubit } from "../engine/gates/PauliX";
 import { applyCNOTtoQubit } from "../engine/gates/CNOT";
 import { applyPauliIToQubit } from "../engine/gates/PauliI";
 import { applyPauliZToQubit } from "../engine/gates/PauliZ";
-
+import { useCircuitPlayer } from "../components/CircuitPlayer";
 import type { CircuitConfig } from "../engine/types/CircuitConfig";
 import type { Qubit } from "../engine/Qubit";
 import { ket0000 } from "../engine/Qubit";
@@ -54,6 +54,25 @@ const Circuit = ({config}:CircuitProps) => {
     id: `line-${i}`,
     name: `q${i}`,
   }));
+
+  // steps used by circuit player
+  const steps = [
+    { lineId: "line-0", gateType: "H" },
+    { lineId: "line-1", gateType: "H" },
+    { lineId: "line-0", gateType: "H" },
+    { lineId: "line-1", gateType: "H" },
+    { lineId: "line-0", gateType: "H" },
+    { lineId: "line-1", gateType: "H" },
+  ];
+  const {
+    play: handlePlay,
+    pause: handlePause,
+    stepForward,
+    stepBack,
+    reset,
+    isPlaying
+  } = useCircuitPlayer(steps, config.qubitCount, setSlots);
+  
   // config.locked is for locking the algo structure for deutsch and bv
   function handleDragEnd(event) {
     const { active, over } = event;
@@ -311,6 +330,7 @@ const Circuit = ({config}:CircuitProps) => {
             </div>
             {/* Quantum Circuit */}
             <div className="grid gap-2">
+              {/* Circuit Builder*/}
               <div className="grid gap-4 p-4 border border-black/20 rounded-lg bg-white">
                 <h3 className="pl-2">Quantum Circuit</h3>
                 <div>
@@ -340,8 +360,30 @@ const Circuit = ({config}:CircuitProps) => {
                 ))}
                 </div>
               </div>
-              <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white">
-                Player
+              {/* Circuit Player*/}
+              <div className="relative flex items-center justify-center p-4 border border-black/20 rounded-lg bg-white">
+                {/* Reset (top-right corner) */}
+                <div onClick={reset} className="absolute top-3 right-3 cursor-pointer">
+                  <img src="../../assets/reset.png" alt="Reset" className="h-6 w-6" />
+                </div>
+                {/* Center Controls */}
+                <div className="flex items-center gap-2">
+                  {/* Step Back */}
+                  <div onClick={stepBack} className="cursor-pointer">
+                    <img src="../../assets/stepback.png" alt="Step Back"/>
+                  </div>
+                  {/* Play / Pause */}
+                  <div onClick={isPlaying ? handlePause : handlePlay} className="cursor-pointer h-12 w-12">
+                    {isPlaying 
+                      ? <img src="../../assets/pause.png" alt="Pause"/>
+                      : <img src="../../assets/play.png" alt="Play" />
+                    }
+                  </div>
+                  {/* Step Forward */}
+                  <div onClick={stepForward} className="cursor-pointer">
+                    <img src="../../assets/stepforward.png" alt="Step Forward"/>
+                  </div>
+                </div>
               </div>
             </div>
             {/* Temporary to fillup space (OpenQASM Code Viewer) */}
