@@ -17,14 +17,6 @@ import type { CircuitConfig } from "../engine/types/CircuitConfig";
 import type { Qubit } from "../engine/Qubit";
 import { ket0000 } from "../engine/Qubit";
 
-interface Metadata {
-  control: number;
-  target: number;
-}
-
-interface CircuitProps {
-  config: CircuitConfig
-}
 /*
 Making the circuit generalize:
   const [slots, setSlots] = useState<Record<string, string[]>> ({
@@ -40,7 +32,23 @@ Making the circuit generalize:
     { id: "line-4", name: "q3" },
   ];
 */
-const Circuit = ({config}:CircuitProps) => {
+
+type GateStep = {
+  lineId: string;
+  gateType: string;
+}
+
+interface Metadata {
+  control: number;
+  target: number;
+}
+
+interface CircuitProps {
+  config: CircuitConfig;
+  steps: GateStep[][];
+}
+
+const Circuit = ( {config,steps }:CircuitProps) => {
   const [state, setState] = useState(config.initialState) //e.g. ket0000 = 0000
   const [slots, setSlots] = useState<Record<string, string[]>> (
     Object.fromEntries(
@@ -55,15 +63,6 @@ const Circuit = ({config}:CircuitProps) => {
     name: `q${i}`,
   }));
 
-  // steps used by circuit player
-  const steps = [
-    { lineId: "line-0", gateType: "H" },
-    { lineId: "line-1", gateType: "H" },
-    { lineId: "line-0", gateType: "H" },
-    { lineId: "line-1", gateType: "H" },
-    { lineId: "line-0", gateType: "H" },
-    { lineId: "line-1", gateType: "H" },
-  ];
   const {
     play: handlePlay,
     pause: handlePause,

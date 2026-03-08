@@ -10,11 +10,27 @@ const deutschConfig: CircuitConfig = {
   allowedGates: ['H', 'I', 'X', 'Z'],
 };
 
+// steps used by circuit player
+  const steps = [
+    [
+      { lineId: "line-0", gateType: "H" },
+      { lineId: "line-1", gateType: "H" },
+    ],
+    [
+      { lineId: "line-0", gateType: "I" },
+      { lineId: "line-1", gateType: "I" },
+    ],
+    [
+      { lineId: "line-0", gateType: "H" },
+      { lineId: "line-1", gateType: "H" },
+    ]
+  ];
+
 const Deutsch = () => {
   return (
     <Layout>
       <div className='h-full w-full'>
-        <Circuit config={deutschConfig}/>
+        <Circuit config={deutschConfig} steps={steps}/>
       </div>
     </Layout>
   )

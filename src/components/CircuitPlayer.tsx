@@ -4,6 +4,7 @@ type GateStep = {
   lineId: string;
   gateType: string;
 };
+type Step = GateStep[];
 
 type Slots = Record<string, string[]>;
 
@@ -12,7 +13,7 @@ function sleep(ms: number) {
 }
 
 export function useCircuitPlayer(
-  steps: GateStep[],
+  steps: Step[],
   qubitCount: number,
   setSlots: React.Dispatch<React.SetStateAction<Slots>>
 ) {
@@ -29,15 +30,29 @@ export function useCircuitPlayer(
     );
 
     for (let i = 0; i < stepCount; i++) {
-      const { lineId, gateType } = steps[i];
-      const instanceId = `${gateType}-${i}`;
+      const step = steps[i];
 
-      newSlots[lineId].push(instanceId);
+      for (const gate of step) {
+        const instanceId = `${gate.gateType}-${i}-${gate.lineId}`;
+        newSlots[gate.lineId].push(instanceId);
+      }
     }
 
     setSlots(newSlots);
   }
 
+  function appendGate(gate: GateStep, stepIndex: number) {
+  setSlots(prev => {
+    const copy = { ...prev };
+
+    const instanceId = `${gate.gateType}-${stepIndex}-${gate.lineId}`;
+
+    copy[gate.lineId] = [...copy[gate.lineId], instanceId];
+
+    return copy;
+  });
+}
+  // to pause without breaking
   async function waitWithPause(ms: number) {
     let elapsed = 0;
 
@@ -52,6 +67,7 @@ export function useCircuitPlayer(
     }
   }
 
+  // allows play (safety check muna)
   async function play() {
     if (isPlayingRef.current) {
       isPausedRef.current = false;
@@ -63,16 +79,31 @@ export function useCircuitPlayer(
     isPausedRef.current = false;
     setIsPlaying(true);
 
+    const gateDelay = 400;
+    const stepDelay = 1000;
+
     while (stepIndexRef.current < steps.length) {
-      if (isPausedRef.current) {
-        await sleep(50);
-        continue;
+      const step = steps[stepIndexRef.current];
+
+      for (let gateIndex = 0; gateIndex < step.length; gateIndex++) {
+
+        if (isPausedRef.current) {
+          await sleep(50);
+          gateIndex--; 
+          continue;
+        }
+
+        await waitWithPause(gateDelay);
+
+        appendGate(step[gateIndex], stepIndexRef.current);
       }
 
-      await waitWithPause(600);
-
       stepIndexRef.current += 1;
-      buildSlots(stepIndexRef.current);
+
+      // longer pause after finishing a step
+      if (stepIndexRef.current < steps.length) {
+        await waitWithPause(stepDelay);
+      }
     }
 
     isPlayingRef.current = false;
