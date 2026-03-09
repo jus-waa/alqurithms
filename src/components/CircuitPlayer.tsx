@@ -5,25 +5,17 @@ type GateStep = {
   gateType: string;
 };
 type Step = GateStep[];
-
 type Slots = Record<string, string[]>;
 
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-export function useCircuitPlayer(
-  steps: Step[],
-  qubitCount: number,
-  setSlots: React.Dispatch<React.SetStateAction<Slots>>
-) {
+const useCircuitPlayer = ( steps: Step[], qubitCount: number, setSlots: React.Dispatch<React.SetStateAction<Slots>>) => {
   const isPausedRef = useRef(false);
   const isPlayingRef = useRef(false);
   const stepIndexRef = useRef(0);
-
   const [isPlaying, setIsPlaying] = useState(false);
 
-  //draws the circuit step-by-step
+  // build entire circuit step-by-step 
+  // newSlots allow new lines
+  // loop through steps then loop through gates
   function buildSlots(stepCount: number) {
     const newSlots: Slots = Object.fromEntries(
       Array.from({ length: qubitCount }, (_, i) => [`line-${i}`, []])
@@ -41,20 +33,12 @@ export function useCircuitPlayer(
     setSlots(newSlots);
   }
 
-  function appendGate(gate: GateStep, stepIndex: number) {
-  setSlots(prev => {
-    const copy = { ...prev };
+  function sleep(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 
-    const instanceId = `${gate.gateType}-${stepIndex}-${gate.lineId}`;
-
-    copy[gate.lineId] = [...copy[gate.lineId], instanceId];
-
-    return copy;
-  });
-}
-  // to pause without breaking
   async function waitWithPause(ms: number) {
-    let elapsed = 0;
+    let elapsed= 0;
 
     while (elapsed < ms) {
       if (isPausedRef.current) {
@@ -66,8 +50,17 @@ export function useCircuitPlayer(
       elapsed += 50;
     }
   }
+  
+  // copy for: exisitng gate + new gates
+  function addGate (gate: GateStep, stepIndex: number) {
+    setSlots(prev => {
+      const copy = {...prev};
+      const instanceId = `${gate.gateType}-${stepIndex}-${gate.lineId}`;
+      copy[gate.lineId] = [...copy[gate.lineId], instanceId];
+      return copy;
+    });
+  }
 
-  // allows play (safety check muna)
   async function play() {
     if (isPlayingRef.current) {
       isPausedRef.current = false;
@@ -81,26 +74,24 @@ export function useCircuitPlayer(
 
     const gateDelay = 400;
     const stepDelay = 1000;
-
+    // get steps then loop sa gates
     while (stepIndexRef.current < steps.length) {
       const step = steps[stepIndexRef.current];
 
       for (let gateIndex = 0; gateIndex < step.length; gateIndex++) {
-
         if (isPausedRef.current) {
           await sleep(50);
-          gateIndex--; 
+          gateIndex--;
           continue;
         }
 
         await waitWithPause(gateDelay);
-
-        appendGate(step[gateIndex], stepIndexRef.current);
+        addGate(step[gateIndex], stepIndexRef.current);
       }
 
       stepIndexRef.current += 1;
 
-      // longer pause after finishing a step
+      // pause ng 1 sec after every steps
       if (stepIndexRef.current < steps.length) {
         await waitWithPause(stepDelay);
       }
@@ -135,7 +126,7 @@ export function useCircuitPlayer(
   }
 
   return {
-    play,
+    play, 
     pause,
     stepForward,
     stepBack,
@@ -143,3 +134,5 @@ export function useCircuitPlayer(
     isPlaying
   };
 }
+
+export default useCircuitPlayer

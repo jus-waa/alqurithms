@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useState} from "react"
 import { DndContext} from '@dnd-kit/core'
 
 import Line from "./Line"
@@ -12,10 +12,9 @@ import { applyPauliXToQubit } from "../engine/gates/PauliX";
 import { applyCNOTtoQubit } from "../engine/gates/CNOT";
 import { applyPauliIToQubit } from "../engine/gates/PauliI";
 import { applyPauliZToQubit } from "../engine/gates/PauliZ";
-import { useCircuitPlayer } from "../components/CircuitPlayer";
+import useCircuitPlayer from "../components/CircuitPlayer";
 import type { CircuitConfig } from "../engine/types/CircuitConfig";
 import type { Qubit } from "../engine/Qubit";
-import { ket0000 } from "../engine/Qubit";
 
 /*
 Making the circuit generalize:
@@ -361,24 +360,21 @@ const Circuit = ( {config,steps }:CircuitProps) => {
               </div>
               {/* Circuit Player*/}
               <div className="relative flex items-center justify-center p-4 border border-black/20 rounded-lg bg-white">
-                {/* Reset (top-right corner) */}
+                {/* Reset*/}
                 <div onClick={reset} className="absolute top-3 right-3 cursor-pointer">
                   <img src="../../assets/reset.png" alt="Reset" className="h-6 w-6" />
                 </div>
                 {/* Center Controls */}
                 <div className="flex items-center gap-2">
-                  {/* Step Back */}
                   <div onClick={stepBack} className="cursor-pointer">
                     <img src="../../assets/stepback.png" alt="Step Back"/>
                   </div>
-                  {/* Play / Pause */}
                   <div onClick={isPlaying ? handlePause : handlePlay} className="cursor-pointer h-12 w-12">
                     {isPlaying 
                       ? <img src="../../assets/pause.png" alt="Pause"/>
                       : <img src="../../assets/play.png" alt="Play" />
                     }
                   </div>
-                  {/* Step Forward */}
                   <div onClick={stepForward} className="cursor-pointer">
                     <img src="../../assets/stepforward.png" alt="Step Forward"/>
                   </div>
@@ -392,7 +388,6 @@ const Circuit = ( {config,steps }:CircuitProps) => {
                 <h3 className="pl-2">OpenQASM 3.0</h3>
                 {/* List of gates */}
                 <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
-
                 </div>
               </div>
             </div>
