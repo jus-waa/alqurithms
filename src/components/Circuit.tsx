@@ -327,9 +327,9 @@ const Circuit = ( {config,steps }:CircuitProps) => {
               </div>
             </div>
             {/* Quantum Circuit */}
-            <div className="grid gap-2">
+            <div className="flex flex-col gap-2 h-full">
               {/* Circuit Builder*/}
-              <div className="grid gap-4 p-4 border border-black/20 rounded-lg bg-white">
+              <div className="flex-1 gap-4 p-4 overflow-auto border border-black/20 rounded-lg bg-white">
                 <h3 className="pl-2">Quantum Circuit</h3>
                 <div>
                   {lines.map((line) => (
@@ -359,7 +359,7 @@ const Circuit = ( {config,steps }:CircuitProps) => {
                 </div>
               </div>
               {/* Circuit Player*/}
-              <div className="relative flex items-center justify-center p-4 border border-black/20 rounded-lg bg-white">
+              <div className="relative flex items-center justify-center p-4 h-24 border border-black/20 rounded-lg bg-white">
                 {/* Reset*/}
                 <div onClick={reset} className="absolute top-3 right-3 cursor-pointer">
                   <img src="../../assets/reset.png" alt="Reset" className="h-6 w-6" />
