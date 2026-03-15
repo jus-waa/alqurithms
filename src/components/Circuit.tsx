@@ -45,9 +45,10 @@ interface Metadata {
 interface CircuitProps {
   config: CircuitConfig;
   steps: GateStep[][];
+  onStepChange?: (step: number) => Promise<void> | void;
 }
 
-const Circuit = ( {config,steps }:CircuitProps) => {
+const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
   const [state, setState] = useState(config.initialState) //e.g. ket0000 = 0000
   const [slots, setSlots] = useState<Record<string, string[]>> (
     Object.fromEntries(
@@ -69,7 +70,7 @@ const Circuit = ( {config,steps }:CircuitProps) => {
     stepBack,
     reset,
     isPlaying
-  } = useCircuitPlayer(steps, config.qubitCount, setSlots);
+  } = useCircuitPlayer(steps, config.qubitCount, setSlots, onStepChange);
   
   // config.locked is for locking the algo structure for deutsch and bv
   function handleDragEnd(event) {
@@ -362,14 +363,14 @@ const Circuit = ( {config,steps }:CircuitProps) => {
               <div className="relative flex items-center justify-center p-4 h-24 border border-black/20 rounded-lg bg-white">
                 {/* Reset*/}
                 <div onClick={reset} className="absolute top-3 right-3 cursor-pointer">
-                  <img src="../../assets/reset.png" alt="Reset" className="h-6 w-6" />
+                  <img src="../../assets/reset.png" alt="Reset" className="h-5 w-5" />
                 </div>
                 {/* Center Controls */}
                 <div className="flex items-center gap-2">
                   <div onClick={stepBack} className="cursor-pointer">
                     <img src="../../assets/stepback.png" alt="Step Back"/>
                   </div>
-                  <div onClick={isPlaying ? handlePause : handlePlay} className="cursor-pointer h-12 w-12">
+                  <div onClick={isPlaying ? handlePause : handlePlay} className="cursor-pointer h-8 w-8">
                     {isPlaying 
                       ? <img src="../../assets/pause.png" alt="Pause"/>
                       : <img src="../../assets/play.png" alt="Play" />

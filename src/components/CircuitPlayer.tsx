@@ -7,7 +7,12 @@ type GateStep = {
 type Step = GateStep[];
 type Slots = Record<string, string[]>;
 
-const useCircuitPlayer = ( steps: Step[], qubitCount: number, setSlots: React.Dispatch<React.SetStateAction<Slots>>) => {
+const useCircuitPlayer = ( 
+  steps: Step[], 
+  qubitCount: number, 
+  setSlots: React.Dispatch<React.SetStateAction<Slots>>,
+  onStepChange?: (step: number) => Promise<void> | void
+) => {
   const isPausedRef = useRef(false);
   const isPlayingRef = useRef(false);
   const stepIndexRef = useRef(0);
@@ -91,6 +96,9 @@ const useCircuitPlayer = ( steps: Step[], qubitCount: number, setSlots: React.Di
 
       stepIndexRef.current += 1;
 
+      if (onStepChange) {
+        await onStepChange(stepIndexRef.current);
+      }
       // pause ng 1 sec after every steps
       if (stepIndexRef.current < steps.length) {
         await waitWithPause(stepDelay);

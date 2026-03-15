@@ -10,11 +10,26 @@ const deutschJozsaConfig: CircuitConfig = {
   allowedGates: ['H', 'I', 'X', 'Z'],
 };
 
+const steps = [
+  [
+    { lineId: "line-0", gateType: "H" },
+    { lineId: "line-1", gateType: "H" },
+  ],
+  [
+    { lineId: "line-0", gateType: "I" },
+    { lineId: "line-1", gateType: "I" },
+  ],
+  [
+    { lineId: "line-0", gateType: "H" },
+    { lineId: "line-1", gateType: "H" },
+  ]
+];
+
 const DeutschJozsa = () => {
   return (
     <Layout>
       <div className='h-full w-full'>
-        <Circuit config={deutschJozsaConfig}/>
+        <Circuit config={deutschJozsaConfig} steps={steps}/>
       </div>
     </Layout>
   )
