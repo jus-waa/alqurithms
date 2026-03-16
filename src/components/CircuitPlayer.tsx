@@ -8,7 +8,7 @@ type Step = GateStep[];
 type Slots = Record<string, string[]>;
 
 const useCircuitPlayer = ( 
-  steps: Step[], 
+  stepsRef: React.MutableRefObject<Step[]>, 
   qubitCount: number, 
   setSlots: React.Dispatch<React.SetStateAction<Slots>>,
   onStepChange?: (step: number) => Promise<void> | void
@@ -27,7 +27,7 @@ const useCircuitPlayer = (
     );
 
     for (let i = 0; i < stepCount; i++) {
-      const step = steps[i];
+      const step = stepsRef.current[i];
 
       for (const gate of step) {
         const instanceId = `${gate.gateType}-${i}-${gate.lineId}`;
@@ -80,8 +80,8 @@ const useCircuitPlayer = (
     const gateDelay = 400;
     const stepDelay = 1000;
     // get steps then loop sa gates
-    while (stepIndexRef.current < steps.length) {
-      const step = steps[stepIndexRef.current];
+    while (stepIndexRef.current < stepsRef.current.length) {
+      const step = stepsRef.current[stepIndexRef.current];
 
       for (let gateIndex = 0; gateIndex < step.length; gateIndex++) {
         if (isPausedRef.current) {
@@ -100,7 +100,7 @@ const useCircuitPlayer = (
         await onStepChange(stepIndexRef.current);
       }
       // pause ng 1 sec after every steps
-      if (stepIndexRef.current < steps.length) {
+      if (stepIndexRef.current < stepsRef.current.length) {
         await waitWithPause(stepDelay);
       }
     }
@@ -115,7 +115,7 @@ const useCircuitPlayer = (
   }
 
   function stepForward() {
-    if (stepIndexRef.current >= steps.length) return;
+    if (stepIndexRef.current >= stepsRef.current.length) return;
 
     stepIndexRef.current += 1;
     buildSlots(stepIndexRef.current);

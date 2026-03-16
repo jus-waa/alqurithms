@@ -1,4 +1,4 @@
-import { useEffect, useState} from "react"
+import { useEffect, useState, useRef} from "react"
 import { DndContext} from '@dnd-kit/core'
 
 import Line from "./Line"
@@ -63,6 +63,10 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
     name: `q${i}`,
   }));
 
+  const stepsRef = useRef(steps);
+  useEffect(() => {
+    stepsRef.current = steps;
+  }, [steps])
   const {
     play: handlePlay,
     pause: handlePause,
@@ -70,7 +74,7 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
     stepBack,
     reset,
     isPlaying
-  } = useCircuitPlayer(steps, config.qubitCount, setSlots, onStepChange);
+  } = useCircuitPlayer(stepsRef, config.qubitCount, setSlots, onStepChange);
   
   // config.locked is for locking the algo structure for deutsch and bv
   function handleDragEnd(event) {

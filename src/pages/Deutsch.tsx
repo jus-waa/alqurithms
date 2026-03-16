@@ -11,20 +11,19 @@ const deutschConfig: CircuitConfig = {
   allowedGates: ['H', 'I', 'X', 'Z'],
 };
 
-const steps = [
-  [
-    { lineId: "line-0", gateType: "H" },
-    { lineId: "line-1", gateType: "H" },
-  ],
-  [
-    { lineId: "line-0", gateType: "H" },
-    { lineId: "line-1", gateType: "H" },
-  ]
-];
-
 const Deutsch = () => {
   const [showOracleModal, setShowOracleModal] = useState(false);
   const resolveRef = useRef<(() => void) | null>(null);
+  const [steps, setSteps] = useState([
+    [
+      { lineId: "line-0", gateType: "H" },
+      { lineId: "line-1", gateType: "H" },
+    ],
+    [
+      { lineId: "line-0", gateType: "H" },
+      { lineId: "line-1", gateType: "H" },
+    ]
+  ]);
 
   async function handleStep(step: number) {
     if (step === 1) {
@@ -39,6 +38,25 @@ const Deutsch = () => {
   
   function choose(type: string) {
     setShowOracleModal(false);
+    let oracleGateStep: { 
+      lineId: string;
+      gateType: string
+    }[][] = [];
+
+    if(type === "f0") {
+      oracleGateStep = [
+        [
+          { lineId: "line-0", gateType: "I" },
+          { lineId: "line-1", gateType: "I" },
+        ]
+      ];
+    }
+
+    setSteps(prev => [
+      prev[0],
+      ...oracleGateStep,
+      prev[prev.length - 1],
+    ]);
 
     if (resolveRef.current) {
       resolveRef.current();
