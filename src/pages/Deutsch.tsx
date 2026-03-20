@@ -17,6 +17,10 @@ const Deutsch = () => {
   const [steps, setSteps] = useState([
     [
       { lineId: "line-0", gateType: "H" },
+      { lineId: "line-1", gateType: "X" },
+    ],
+    [
+      { lineId: "line-0", gateType: "X" },
       { lineId: "line-1", gateType: "H" },
     ],
     [
@@ -26,7 +30,7 @@ const Deutsch = () => {
   ]);
 
   async function handleStep(step: number) {
-    if (step === 1) {
+    if (step === 2) {
       setShowOracleModal(true);
 
       // pause until function is chosen
@@ -50,12 +54,44 @@ const Deutsch = () => {
           { lineId: "line-1", gateType: "I" },
         ]
       ];
+      console.log(oracleGateStep);
+    } else if(type === "f1") {
+      oracleGateStep = [
+        [
+          { lineId: "line-0", gateType: "X" },
+          { lineId: "line-1", gateType: "X" },
+        ]
+      ];
+      console.log(oracleGateStep);
+    } else if(type === "f2") {
+      oracleGateStep = [
+        [
+          { lineId: "line-0", gateType: "Z" },
+          { lineId: "line-1", gateType: "I" },
+        ],
+        [
+          { lineId: "line-0", gateType: "X" },
+          { lineId: "line-1", gateType: "X" },
+        ],
+        [
+          { lineId: "line-0", gateType: "Z" },
+          { lineId: "line-1", gateType: "I" },
+        ]
+      ];
+    } else if(type === "f3") {
+      oracleGateStep = [
+        [
+          { lineId: "line-0", gateType: "I" },
+          { lineId: "line-1", gateType: "Z" },
+        ]
+      ];
     }
 
     setSteps(prev => [
       prev[0],
+      prev[1],
       ...oracleGateStep,
-      prev[prev.length - 1],
+      prev[prev.length - 1], 
     ]);
 
     if (resolveRef.current) {
@@ -73,8 +109,8 @@ const Deutsch = () => {
                 <div className="modal">
                   <button onClick={() => choose("f0")} className='border p-2 m-2 cursor-pointer'> f(x)=0 </button>
                   <button onClick={() => choose("f1")} className='border p-2 m-2 cursor-pointer'> f(x)=1 </button>
-                  <button onClick={() => choose("fx")} className='border p-2 m-2 cursor-pointer'> f(x)=x </button>
-                  <button onClick={() => choose("notx")} className='border p-2 m-2 cursor-pointer'> f(x)=¬x </button>
+                  <button onClick={() => choose("f2")} className='border p-2 m-2 cursor-pointer'> f(x)=2 </button>
+                  <button onClick={() => choose("f3")} className='border p-2 m-2 cursor-pointer'> f(x)=3 </button>
                 </div>
               </div>
             </div>
