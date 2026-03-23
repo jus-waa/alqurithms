@@ -129,6 +129,7 @@ const useCircuitPlayer = (
   }
 
   function reset() {
+    pause();
     stepIndexRef.current = 0;
     buildSlots(0);
   }

@@ -8,7 +8,7 @@ const deutschConfig: CircuitConfig = {
   algoName: "Deutsch", 
   qubitCount: 2,
   initialState: zeroState(2),
-  allowedGates: ['H', 'I', 'X', 'Z', 'CNOT', 'M', ''],
+  allowedGates: ["H", "I", "X", "Z", "CNOT", "M", ""],
 };
 
 const Deutsch = () => {
@@ -20,17 +20,28 @@ const Deutsch = () => {
       { lineId: "line-1", gateType: "X" },
     ],
     [
-      { lineId: "line-0", gateType: "X" },
+      { lineId: "line-0", gateType: "" },
       { lineId: "line-1", gateType: "H" },
     ],
     [
+      { lineId: "line-0", gateType: "" },
+      { lineId: "line-1", gateType: "" },
+    ],
+    [
       { lineId: "line-0", gateType: "H" },
-      { lineId: "line-1", gateType: "H" },
+      { lineId: "line-1", gateType: "I" },
+    ],
+    [
+      { lineId: "line-0", gateType: "" },
+      { lineId: "line-1", gateType: "" },
+    ],
+    [
+      { lineId: "line-0", gateType: "M" },
     ]
   ]);
 
   async function handleStep(step: number) {
-    if (step === 2) {
+    if (step === 3) {
       setShowOracleModal(true);
 
       // pause until function is chosen
@@ -90,7 +101,11 @@ const Deutsch = () => {
     setSteps(prev => [
       prev[0],
       prev[1],
+      prev[2],
       ...oracleGateStep,
+      prev[prev.length - 4],
+      prev[prev.length - 3],
+      prev[prev.length - 2],
       prev[prev.length - 1], 
     ]);
 
