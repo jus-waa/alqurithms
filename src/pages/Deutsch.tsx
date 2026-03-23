@@ -8,7 +8,7 @@ const deutschConfig: CircuitConfig = {
   algoName: "Deutsch", 
   qubitCount: 2,
   initialState: zeroState(2),
-  allowedGates: ['H', 'I', 'X', 'Z'],
+  allowedGates: ['H', 'I', 'X', 'Z', 'CNOT', 'M', ''],
 };
 
 const Deutsch = () => {

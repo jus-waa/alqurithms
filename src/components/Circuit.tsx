@@ -12,6 +12,8 @@ import { applyPauliXToQubit } from "../engine/gates/PauliX";
 import { applyCNOTtoQubit } from "../engine/gates/CNOT";
 import { applyPauliIToQubit } from "../engine/gates/PauliI";
 import { applyPauliZToQubit } from "../engine/gates/PauliZ";
+import { applyBarrierToQubit } from "../engine/gates/Barrier";
+import { measureQubit } from "../engine/gates/Measurement";
 import useCircuitPlayer from "../components/CircuitPlayer";
 import type { CircuitConfig } from "../engine/types/CircuitConfig";
 import type { Qubit } from "../engine/Qubit";
@@ -58,6 +60,7 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
   const [multiSlots, setMultiSlots] = useState<Record<string, Metadata>>({});
   const [pending, setPending] = useState<{lineId: string, lineIndex: number, instanceId: string} | null>(null);
   const [showModal, setShowModal] = useState(false);  
+  const [measurementResults, setMeasurementResults] = useState<Record<string, Qubit>>({});
   const lines = Array.from({ length: config.qubitCount }, (_,i) => ({
     id: `line-${i}`,
     name: `q${i}`,
@@ -89,6 +92,15 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
   }
 
   function handleSingleQubitGates(active, over) {
+    const gateType = active.id.split("-")[0];
+    // clear measurement result if M gate is being moved or removed
+    if (gateType === "M") {
+      setMeasurementResults(prev => {
+        const updated = { ...prev };
+        delete updated[active.id];
+        return updated;
+      });
+    }
     setSlots((prev) => {
       let qubitLine: string | null = null;
      
@@ -125,6 +137,14 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
       if (!updated[over.id].includes(instanceId)) {
         updated[over.id] = [...updated[over.id], instanceId];
       }
+      return updated;
+    });
+    setMeasurementResults(prev => {
+      const updated = { ...prev };
+      Object.keys(updated).forEach(id => {
+        const stillInCircuit = Object.values(slots).some(line => line.includes(id));
+        if (!stillInCircuit) delete updated[id];
+      });
       return updated;
     });
   }
@@ -246,46 +266,48 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
   }
 
   function executeCircuit() {
-    let currentState: Qubit = [...config.initialState];
-    // get max no. gates on any line
-    const maxGates = Math.max(...Object.values(slots).map(gates => gates.length));
-    // execute gates column by column
-    for (let col = 0; col < maxGates; col++) {
-      lines.forEach((line, lineIndex) => {
-        const gatesOnLine = slots[line.id];
-        if (gatesOnLine[col]) {
-          const gateId = gatesOnLine[col]
-          const gateType = gatesOnLine[col].split("-")[0];
-          if (gateType === "H") {
-            currentState = applyHadamardToQubit(currentState, lineIndex);
-            console.log('Current state: ', currentState);
-          }
-          else if (gateType === "I") {
-            currentState = applyPauliIToQubit(currentState, lineIndex);
-            console.log('Current state: ', currentState);
-          }
-          else if (gateType === "X") {
-            currentState = applyPauliXToQubit(currentState, lineIndex);
-            console.log('Current state: ', currentState);
-          }
-          else if (gateType === "Z") {
-            currentState = applyPauliZToQubit(currentState, lineIndex);
-            console.log('Current state: ', currentState);
-          }
-          else if (gateType === "CNOT") {
-            const metadata = multiSlots[gateId];
-            if (metadata) {
-              currentState = applyCNOTtoQubit(currentState, metadata.control, metadata.target);
-              console.log(`CNOT gate (C:${metadata.control}, T:${metadata.target}) - Current state: `, currentState);
-            }
-          }
-          // other gates
-        }
-      });
-    }
-    setState(currentState)
-  }
+  let currentState: Qubit = [...config.initialState];
+  const maxGates = Math.max(...Object.values(slots).map(gates => gates.length), 0);
 
+  for (let col = 0; col < maxGates; col++) {
+    let colState: Qubit = [...currentState];
+
+    lines.forEach((line, lineIndex) => {
+      const gatesOnLine = slots[line.id];
+      const gateId = gatesOnLine[col];
+      if (!gateId) return;
+
+      const gateType = gateId.split("-")[0];
+
+      if (gateType === "H") {
+        colState = applyHadamardToQubit(colState, lineIndex);
+      } else if (gateType === "I") {
+        colState = applyPauliIToQubit(colState, lineIndex);
+      } else if (gateType === "X") {
+        colState = applyPauliXToQubit(colState, lineIndex);
+      } else if (gateType === "Z") {
+        colState = applyPauliZToQubit(colState, lineIndex);
+      } else if (gateType === "") {
+        colState = applyBarrierToQubit(colState, lineIndex);
+      } else if (gateType === "CNOT") {
+        const metadata = multiSlots[gateId];
+        if (metadata && lineIndex === metadata.control) {
+          colState = applyCNOTtoQubit(colState, metadata.control, metadata.target);
+        }
+      } else if (gateType === "M") {
+        if (measurementResults[gateId]) {
+          colState = measurementResults[gateId];
+        } else {
+          const { newState } = measureQubit(colState, lineIndex, config.qubitCount);
+          setMeasurementResults(prev => ({ ...prev, [gateId]: newState }));
+          colState = newState;
+        }
+      }
+    });
+    currentState = colState;
+  }
+  setState(currentState);
+}
   // execute everytime a gate is dropped in the slot
   useEffect(() => {
     executeCircuit();
