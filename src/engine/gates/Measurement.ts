@@ -1,24 +1,29 @@
 // measurementgate.ts
 import type { Qubit } from '../Qubit';
 
+// state is the arr of num of prob amplitudes of all possible qubit combination
+// targetQubit is speific qubit num ex. 3 qubit; q0, q1, q2 == 0, 1, 2
+// numQubits only for clarity/future use 
+// reuslt will only be 0 or 1
 export function measureQubit(
   state: Qubit,
   targetQubit: number,
   numQubits: number
 ): { result: 0 | 1; newState: Qubit } {
+  // q0 least sig
+  // probability of measuring 0
   const dim = state.length;
-  // Match Hadamard's little-endian convention: q0 = LSB
-  const bitIndex = targetQubit; // NOT numQubits - 1 - targetQubit
-
+  const bitIndex = targetQubit; 
   let prob0 = 0;
   for (let i = 0; i < dim; i++) {
     if (((i >> bitIndex) & 1) === 0) {
-      prob0 += Math.pow(Math.abs(state[i] as number), 2);
+      prob0 += Math.pow(Math.abs(state[i] as number), 2); //prob = |amp|^2
     }
   }
+  // type annotation, then if math.rand < prob0 return 0 else 1
+  const result: 0 | 1 = Math.random() < prob0 ? 0 : 1; // random collapse.
 
-  const result: 0 | 1 = Math.random() < prob0 ? 0 : 1;
-
+  // renormalization
   const newState: Qubit = [...state] as Qubit;
   let norm = 0;
 

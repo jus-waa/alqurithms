@@ -79,7 +79,7 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
     isPlaying
   } = useCircuitPlayer(stepsRef, config.qubitCount, setSlots, onStepChange);
   
-  // config.locked is for locking the algo structure for deutsch and bv
+  // config.locked is for locking the algo structure for deutsch and bv.
   function handleDragEnd(event) {
     const { active, over } = event;
     const gateType = active.id.split("-")[0];
