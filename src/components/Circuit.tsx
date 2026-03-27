@@ -37,6 +37,10 @@ Making the circuit generalize:
 type GateStep = {
   lineId: string;
   gateType: string;
+  meta?: {
+    control: number;
+    target: number;
+  }
 }
 
 interface Metadata {
@@ -77,7 +81,7 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
     stepBack,
     reset,
     isPlaying
-  } = useCircuitPlayer(stepsRef, config.qubitCount, setSlots, onStepChange);
+  } = useCircuitPlayer(stepsRef, config.qubitCount, setSlots, setMultiSlots, onStepChange);
   
   // config.locked is for locking the algo structure for deutsch and bv.
   function handleDragEnd(event) {

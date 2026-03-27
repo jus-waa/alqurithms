@@ -7,4 +7,8 @@ export interface CircuitConfig {
   allowedGates: string[];
   presetSlots?: Record<string, string[]>;
   locked?: boolean;
+  meta?: {
+    control: number;
+    target: number;
+  }
 }

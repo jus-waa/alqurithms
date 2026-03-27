@@ -55,7 +55,11 @@ const Deutsch = () => {
     setShowOracleModal(false);
     let oracleGateStep: { 
       lineId: string;
-      gateType: string
+      gateType: string;
+      meta?: {
+        control: number;
+        target: number;
+      }
     }[][] = [];
 
     if(type === "f0") {
@@ -69,8 +73,8 @@ const Deutsch = () => {
     } else if(type === "f1") {
       oracleGateStep = [
         [
-          { lineId: "line-0", gateType: "X" },
-          { lineId: "line-1", gateType: "X" },
+          { lineId: "line-0", gateType: "CNOT", meta: { control: 1, target: 0 } },
+          { lineId: "line-1", gateType: "CNOT", meta: { control: 1, target: 0 } },
         ]
       ];
       console.log(oracleGateStep);
@@ -81,8 +85,8 @@ const Deutsch = () => {
           { lineId: "line-1", gateType: "I" },
         ],
         [
-          { lineId: "line-0", gateType: "X" },
-          { lineId: "line-1", gateType: "X" },
+          { lineId: "line-0", gateType: "CNOT", meta: { control: 1, target: 0 } },
+          { lineId: "line-1", gateType: "CNOT", meta: { control: 1, target: 0 } },
         ],
         [
           { lineId: "line-0", gateType: "Z" },

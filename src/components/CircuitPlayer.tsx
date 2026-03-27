@@ -3,6 +3,10 @@ import { useRef, useState } from "react";
 type GateStep = {
   lineId: string;
   gateType: string;
+  meta?: {
+    control: number;
+    target: number;
+  }
 };
 type Step = GateStep[];
 type Slots = Record<string, string[]>;
@@ -11,6 +15,7 @@ const useCircuitPlayer = (
   stepsRef: React.MutableRefObject<Step[]>, 
   qubitCount: number, 
   setSlots: React.Dispatch<React.SetStateAction<Slots>>,
+  setMultiSlots: React.Dispatch<React.SetStateAction<Record<string, { control: number; target: number; }>>>,
   onStepChange?: (step: number) => Promise<void> | void
 ) => {
   const isPausedRef = useRef(false);
@@ -25,17 +30,31 @@ const useCircuitPlayer = (
     const newSlots: Slots = Object.fromEntries(
       Array.from({ length: qubitCount }, (_, i) => [`line-${i}`, []])
     );
+    const newMultiSlots: Record<string, { control: number; target: number }> = {};
 
     for (let i = 0; i < stepCount; i++) {
       const step = stepsRef.current[i];
 
       for (const gate of step) {
         const instanceId = `${gate.gateType}-${i}-${gate.lineId}`;
-        newSlots[gate.lineId].push(instanceId);
+        // only push once — for CNOT, both lines share the same instanceId
+        // so use control line as the canonical push point
+        if (gate.gateType === "CNOT") {
+          if (gate.meta && gate.meta.control === parseInt(gate.lineId.split("-")[1])) {
+            const controlId = `line-${gate.meta.control}`;
+            const targetId = `line-${gate.meta.target}`;
+            const cnotId = `CNOT-${i}`; //shared id for both lines
+            newMultiSlots[cnotId] = { control: gate.meta.control, target: gate.meta.target };
+            newSlots[controlId].push(cnotId);
+            newSlots[targetId].push(cnotId);
+          }
+        } else {
+          newSlots[gate.lineId].push(instanceId);
+        }
       }
     }
-
     setSlots(newSlots);
+    setMultiSlots(newMultiSlots);
   }
 
   function sleep(ms: number) {
@@ -58,12 +77,30 @@ const useCircuitPlayer = (
   
   // copy for: exisitng gate + new gates
   function addGate (gate: GateStep, stepIndex: number) {
-    setSlots(prev => {
-      const copy = {...prev};
-      const instanceId = `${gate.gateType}-${stepIndex}-${gate.lineId}`;
-      copy[gate.lineId] = [...copy[gate.lineId], instanceId];
-      return copy;
-    });
+    if (gate.gateType === "CNOT" && gate.meta) {
+      if (gate.meta.control !== parseInt(gate.lineId.split("-")[1])) {
+        return;
+      }
+      const cnotId = `CNOT-${stepIndex}`;
+      const controlId = `line-${gate.meta.control}`;
+      const targetId = `line-${gate.meta.target}`;
+      setMultiSlots(prev => ({
+        ...prev,
+        [cnotId]: { control: gate.meta!.control, target: gate.meta!.target }
+      }));
+      setSlots(prev => ({
+        ...prev,
+        [controlId]: [...prev[controlId], cnotId],
+        [targetId]: [...prev[targetId], cnotId],
+      }));
+    } else {
+      setSlots(prev => {
+        const copy = {...prev};
+        const instanceId = `${gate.gateType}-${stepIndex}-${gate.lineId}`;
+        copy[gate.lineId] = [...copy[gate.lineId], instanceId];
+        return copy;
+      });
+    }
   }
 
   async function play() {
@@ -115,6 +152,7 @@ const useCircuitPlayer = (
   }
 
   function stepForward() {
+    pause();
     if (stepIndexRef.current >= stepsRef.current.length) return;
 
     stepIndexRef.current += 1;
@@ -122,6 +160,7 @@ const useCircuitPlayer = (
   }
 
   function stepBack() {
+    pause();
     if (stepIndexRef.current <= 0) return;
 
     stepIndexRef.current -= 1;
@@ -144,4 +183,4 @@ const useCircuitPlayer = (
   };
 }
 
-export default useCircuitPlayer
+export default useCircuitPlayer;
