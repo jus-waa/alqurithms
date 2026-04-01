@@ -5,6 +5,8 @@ type GateStep = {
   gateType: string;
   meta?: {
     control: number;
+    control2?: number;
+    control3?: number;
     target: number;
   }
 };
@@ -15,7 +17,7 @@ const useCircuitPlayer = (
   stepsRef: React.MutableRefObject<Step[]>, 
   qubitCount: number, 
   setSlots: React.Dispatch<React.SetStateAction<Slots>>,
-  setMultiSlots: React.Dispatch<React.SetStateAction<Record<string, { control: number; target: number; }>>>,
+  setMultiSlots: React.Dispatch<React.SetStateAction<Record<string, { control: number; control2?: number, control3?: number, target: number; }>>>,
   onStepChange?: (step: number) => Promise<void> | void
 ) => {
   const isPausedRef = useRef(false);
@@ -30,7 +32,7 @@ const useCircuitPlayer = (
     const newSlots: Slots = Object.fromEntries(
       Array.from({ length: qubitCount }, (_, i) => [`line-${i}`, []])
     );
-    const newMultiSlots: Record<string, { control: number; target: number }> = {};
+    const newMultiSlots: Record<string, { control: number; control2?: number; control3?: number; target: number }> = {};
 
     for (let i = 0; i < stepCount; i++) {
       const step = stepsRef.current[i];
@@ -44,9 +46,31 @@ const useCircuitPlayer = (
             const controlId = `line-${gate.meta.control}`;
             const targetId = `line-${gate.meta.target}`;
             const cnotId = `CNOT-${i}`; //shared id for both lines
-            newMultiSlots[cnotId] = { control: gate.meta.control, target: gate.meta.target };
+            newMultiSlots[cnotId] = { 
+              control: gate.meta.control, 
+              target: gate.meta.target 
+            };
             newSlots[controlId].push(cnotId);
             newSlots[targetId].push(cnotId);
+          }
+        } else if (gate.gateType === "T"){
+          if (gate.meta && gate.meta.control === parseInt(gate.lineId.split("-")[1])) {
+            const controlId = `line-${gate.meta.control}`;
+            const control2Id = `line-${gate.meta.control2}`;
+            const control3Id = `line-${gate.meta.control3}`;
+            const targetId = `line-${gate.meta.target}`;
+            const toffoliId = `T-${i}`;
+            newMultiSlots[toffoliId] = {
+              control: gate.meta.control, 
+              control2: gate.meta.control2,
+              control3: gate.meta.control3,
+              target: gate.meta.target 
+            };
+            newSlots[controlId].push(toffoliId);
+            newSlots[control2Id].push(toffoliId);
+            newSlots[control3Id].push(toffoliId);
+            newSlots[targetId].push(toffoliId);
+
           }
         } else {
           newSlots[gate.lineId].push(instanceId);
@@ -92,6 +116,30 @@ const useCircuitPlayer = (
         ...prev,
         [controlId]: [...prev[controlId], cnotId],
         [targetId]: [...prev[targetId], cnotId],
+      }));
+    } else if (gate.gateType === "T" && gate.meta) {
+      if (gate.meta.control !== parseInt(gate.lineId.split("-")[1])) {
+        return;
+      }
+      const toffoliId = `T-${stepIndex}`;
+      const controlId = `line-${gate.meta.control}`;
+      const control2Id = `line-${gate.meta.control2}`;
+      const control3Id = `line-${gate.meta.control3}`;
+      const targetId = `line-${gate.meta.target}`;
+      setMultiSlots(prev => ({
+        ...prev,
+        [toffoliId]: { control: gate.meta!.control,
+           control2: gate.meta!.control2,
+           control3: gate.meta!.control3,
+          target: gate.meta!.target
+        }
+      }));
+      setSlots(prev => ({
+        ...prev,
+        [controlId]: [...prev[controlId], toffoliId],
+        [control2Id]: [...prev[control2Id], toffoliId],
+        [control3Id]: [...prev[control3Id], toffoliId],
+        [targetId]: [...prev[targetId], toffoliId],
       }));
     } else {
       setSlots(prev => {

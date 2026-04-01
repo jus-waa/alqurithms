@@ -9,6 +9,8 @@ export interface CircuitConfig {
   locked?: boolean;
   meta?: {
     control: number;
+    control2?: number;
+    control3?: number;
     target: number;
   }
 }

@@ -5,13 +5,13 @@ export const CNOTMatrix: number[][] = [
   [0,1,0,0],
   [0,0,0,1],
   [0,0,1,0]
-]
+];
 
 /*
   if control bit eqauls to 1 then flip target,
   else is just do nothing state remains
 */
-export function applyCNOTtoQubit(state: Qubit, controlIndex: number, targetQubit: number): Qubit {
+export function applyCNOTToQubit(state: Qubit, controlIndex: number, targetQubit: number): Qubit {
   const n = state.length;
   const newState: number[] = new Array(n).fill(0);
 

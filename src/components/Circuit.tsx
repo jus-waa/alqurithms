@@ -9,7 +9,8 @@ import QSphere from "./QSphere";
 
 import { applyHadamardToQubit } from "../engine/gates/Hadamard";
 import { applyPauliXToQubit } from "../engine/gates/PauliX";
-import { applyCNOTtoQubit } from "../engine/gates/CNOT";
+import { applyCNOTToQubit } from "../engine/gates/CNOT";
+import { applyToffoliToQubit } from "../engine/gates/Toffoli";
 import { applyPauliIToQubit } from "../engine/gates/PauliI";
 import { applyPauliZToQubit } from "../engine/gates/PauliZ";
 import { applyBarrierToQubit } from "../engine/gates/Barrier";
@@ -45,6 +46,8 @@ type GateStep = {
 
 interface Metadata {
   control: number;
+  control2?: number;
+  control3?: number;
   target: number;
 }
 
@@ -83,16 +86,17 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
     isPlaying
   } = useCircuitPlayer(stepsRef, config.qubitCount, setSlots, setMultiSlots, onStepChange);
   
-  // config.locked is for locking the algo structure for deutsch and bv.
+  // config.locked is for locking the algo structure
+  // filter single and multiqubit gates
   function handleDragEnd(event) {
+    if (config.locked) return;
     const { active, over } = event;
     const gateType = active.id.split("-")[0];
-    if (gateType === "CNOT") {
+    if (gateType === "CNOT" || gateType === "T") {
       handleMultiQubitGates(active, over);
     } else {
       handleSingleQubitGates(active, over);
     }
-    if (config.locked) return;
   }
 
   function handleSingleQubitGates(active, over) {
@@ -115,11 +119,10 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
           break; 
         }
       }
-       // check if its a new instance or existing
+      // check if its a new instance or existing
       const isExisting = !!qubitLine;
       // generate or reuse id 
       const instanceId = isExisting ? active.id : `${active.id}-${Math.random().toString(36).slice(2, 9)}`;
-      
       // get latest state
       const updated = { ...prev };
       // if dropped outside
@@ -155,73 +158,108 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
 
   function handleMultiQubitGates(active, over) {
     const gateType = active.id.split("-")[0];
-    if (gateType !== "CNOT") {
+    if (gateType !== "CNOT" && gateType !== "T") {
       return; 
     }
-    const isExistingCNOT = multiSlots[active.id];
-    const instanceId = isExistingCNOT ? active.id : `CNOT-${Math.random().toString(36).slice(2, 9)}`;
-    // if drop outside remove from the old line
-    // medyo redundant pero nagana e
-    if (!over && isExistingCNOT) {
-      const oldControlId = lines[isExistingCNOT.control].id;
-      const oldTargetId = lines[isExistingCNOT.target].id;
+    const isExisting = multiSlots[active.id];
+    const instanceId = isExisting ? active.id : `${gateType}-${Math.random().toString(36).slice(2, 9)}`;
+    // delete if drg outside (del case)
+    if (!over) {
+      if (isExisting)  {
+        const ids = (gateType === "T")
+        ? [lines[isExisting.control].id, lines[isExisting.control2!].id, lines[isExisting.control3!].id, lines[isExisting.target].id]
+        : [lines[isExisting.control].id, lines[isExisting.target].id];
 
-      setSlots(prev => ({
-        ...prev,
-        [oldControlId]: prev[oldControlId].filter(id => id !== instanceId),
-        [oldTargetId]: prev[oldTargetId].filter(id => id !== instanceId)
-      }));
+        setSlots(prev => {
+          const updated = { ...prev };
+          ids.forEach(id => {
+            updated[id] = updated[id].filter(g => g !== instanceId);
+          });
+          return updated;
+        });
 
-      setMultiSlots(prev => {
-        const updated = {...prev};
-        delete updated[active.id];
-        return updated;
-      });
+        setMultiSlots(prev => {
+          const updated = {...prev};
+          delete updated[instanceId];
+          return updated;
+        });
+        return;
+      }
       return;
     }
-    // remove from old line if iddrag sa iba
-    if (isExistingCNOT) {
-      setSlots(prev => ({
-        ...prev,
-        [isExistingCNOT.control]: prev[isExistingCNOT.control].filter(id => id !== instanceId),
-        [isExistingCNOT.target]: prev[isExistingCNOT.target].filter(id => id !== instanceId)
-      }));
 
-      setMultiSlots(prev => {
-        const updated = {...prev};
-        delete updated[active.id];
-        return updated;
-      });
-    }
-
-    // where the user drops the CNOT
     const controlId = over.id;
-    // which line it dropped
     const controlIndex = lines.findIndex(line => line.id === controlId);
-    // auto set muna target sa baba
-    const targetId = lines[controlIndex + 1]?.id;
-    const targetIndex = controlIndex + 1;
 
-    if (!targetId) {
-      alert("CNOT needs a target qubit below.");
-      return;
+    // if already placed on the same line, do nothing
+    if (isExisting && isExisting.control === controlIndex) return;
+
+    // move case
+    if (isExisting) {
+      const ids = gateType === "T"
+        ? [lines[isExisting.control].id, lines[isExisting.control2!].id, lines[isExisting.control3!].id, lines[isExisting.target].id]
+        : [lines[isExisting.control].id, lines[isExisting.target].id];
+
+      setSlots(prev => {
+        const updated = { ...prev };
+        ids.forEach(id => {
+          updated[id] = updated[id].filter(g => g !== instanceId);
+        });
+        return updated;
+      });
+
+      setMultiSlots(prev => {
+        const updated = { ...prev };
+        delete updated[instanceId];
+        return updated;
+      });
     }
 
-    setMultiSlots(prev => ({
-      ...prev,
-      [instanceId]: {
-        control: controlIndex,
-        target: targetIndex}
-    }));
+    //toffoli
+    if(gateType === "T") {
+      const c1 = controlIndex;
+      const c2 = controlIndex + 1;
+      const c3 = controlIndex + 2;
+      const t = controlIndex + 3;
 
-    setSlots(prev => ({
-      ...prev,
-      [controlId]: [...prev[controlId], instanceId],
-      [targetId]: [...prev[targetId], instanceId]
-    }));
+      if (!lines[t]) {
+        alert("Toffoli needs 3 lines below the drop point.");
+        return;
+      }
+      setMultiSlots(prev => ({
+        ...prev,
+        [instanceId]: { control: c1, control2: c2, control3: c3, target: t }
+      }));
 
-    setPending({ lineId: controlId, lineIndex: controlIndex, instanceId: instanceId });
-    setShowModal(true);
+      setSlots(prev => ({
+        ...prev,
+        [lines[c1].id]: [...prev[lines[c1].id], instanceId],
+        [lines[c2].id]: [...prev[lines[c2].id], instanceId],
+        [lines[c3].id]: [...prev[lines[c3].id], instanceId],
+        [lines[t].id]: [...prev[lines[t].id], instanceId]
+      }));
+    } else { //cnot
+      const targetIndex = controlIndex + 1;
+      const targetId = lines[targetIndex]?.id;
+
+      if (!targetId) {
+        alert("CNOT needs a target qubit below.");
+        return;
+      }
+
+      setMultiSlots(prev => ({
+        ...prev,
+        [instanceId]: { control: controlIndex, target: targetIndex}
+      }));
+
+      setSlots(prev => ({
+        ...prev,
+        [controlId]: [...prev[controlId], instanceId],
+        [targetId]: [...prev[targetId], instanceId]
+      }));
+      setPending({ lineId: controlId, lineIndex: controlIndex, instanceId: instanceId });
+      setShowModal(true);
+    }
   }
 
   function handleMultiQubitConfirm(control: number, target: number) {
@@ -296,7 +334,18 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
       } else if (gateType === "CNOT") {
         const metadata = multiSlots[gateId];
         if (metadata && lineIndex === metadata.control) {
-          colState = applyCNOTtoQubit(colState, metadata.control, metadata.target);
+          colState = applyCNOTToQubit(colState, metadata.control, metadata.target);
+        }
+      } else if (gateType === "T") {
+        const metadata = multiSlots[gateId];
+        if (metadata && lineIndex === metadata.control && metadata.control2 !== undefined && metadata.control3 !== undefined) {
+          colState = applyToffoliToQubit(
+            colState,
+            metadata.control,
+            metadata.control2,
+            metadata.control3,
+            metadata.target
+          )
         }
       } else if (gateType === "M") {
         if (measurementResults[gateId]) {
@@ -368,13 +417,22 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
                     {slots[line.id].map((gateId) => {
                       const gateType = gateId.split("-")[0];
                       const metadata = multiSlots[gateId];
+                      const currentLineIndex = lines.findIndex(l => l.id === line.id);
                       let displayName = gateType;
+
                       if (gateType === "CNOT" && metadata) {
-                        const currentLineIndex = lines.findIndex(l => l.id === line.id);
                         if (currentLineIndex === metadata.control) {
-                          displayName = ".";
+                          displayName = "●";
                         } else {
                           displayName = "⊕";
+                        }
+                      } 
+                      if (gateType === "T" && metadata) {
+                        const currentLineIndex = lines.findIndex(l => l.id === line.id);
+                        if (currentLineIndex === metadata.target) {
+                          displayName = "⊕";          // target qubit
+                        } else {
+                          displayName = "●";          // control qubits
                         }
                       }
                       return (
