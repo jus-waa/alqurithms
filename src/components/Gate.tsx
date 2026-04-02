@@ -1,18 +1,19 @@
 import { useDraggable } from "@dnd-kit/core";
+import { forwardRef } from "react";
 
 interface GateProps {
   id: string;
   name: string;
 }
 
-const Gate = ({id, name}: GateProps) => {
-  const {attributes, listeners, setNodeRef, transform} = useDraggable({ 
-    id,
-  });
+const Gate = forwardRef<HTMLDivElement, GateProps>(({ id, name }, ref) => {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({ id });
   const style = {
-    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+    transform: transform 
+    ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
     : undefined,
     display: "flex",
+    alignItems: "center",
     justifyContent: "center",
     backgroundColor: "white",
     border: "1px solid rgba(0, 0, 0, 0.2)",
@@ -22,17 +23,28 @@ const Gate = ({id, name}: GateProps) => {
     width: "35px",
     cursor: "grab",
     zIndex: "10",
+    position: "relative" as const,
   };
+  
+  const mergeRefs = (e: HTMLDivElement | null) => {
+    setNodeRef(e)
+    if (typeof ref === "function") {
+      ref(e)
+    } else if (ref) {
+      ref.current = e;
+    }
+  } 
 
   return (
     <>
       <div 
-        ref={setNodeRef} 
+        ref={mergeRefs} 
         style={style} {...listeners} {...attributes}> 
         {name}
       </div>
     </>
   );
-}
+})
 
-export default Gate
+Gate.displayName = "Gate"
+export default Gate;

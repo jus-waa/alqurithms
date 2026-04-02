@@ -23,7 +23,7 @@ const steps = [
     { lineId: "line-1", gateType: "" },
     { lineId: "line-2", gateType: "" },
     { lineId: "line-3", gateType: "" },
-    { lineId: "line-4", gateType: "X" },
+    { lineId: "line-4", gateType: "H" },
   ],
   [
     { lineId: "line-0", gateType: "" },

@@ -73,8 +73,8 @@ const Deutsch = () => {
     } else if(type === "f1") {
       oracleGateStep = [
         [
-          { lineId: "line-0", gateType: "CNOT", meta: { control: 1, target: 0 } },
-          { lineId: "line-1", gateType: "CNOT", meta: { control: 1, target: 0 } },
+          { lineId: "line-0", gateType: "CNOT", meta: { control: 0, target: 1 } },
+          { lineId: "line-1", gateType: "CNOT", meta: { control: 0, target: 1 } },
         ]
       ];
       console.log(oracleGateStep);
@@ -85,8 +85,8 @@ const Deutsch = () => {
           { lineId: "line-1", gateType: "I" },
         ],
         [
-          { lineId: "line-0", gateType: "CNOT", meta: { control: 1, target: 0 } },
-          { lineId: "line-1", gateType: "CNOT", meta: { control: 1, target: 0 } },
+          { lineId: "line-0", gateType: "CNOT", meta: { control: 0, target: 1 } },
+          { lineId: "line-1", gateType: "CNOT", meta: { control: 0, target: 1 } },
         ],
         [
           { lineId: "line-0", gateType: "Z" },

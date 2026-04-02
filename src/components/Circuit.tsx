@@ -18,22 +18,7 @@ import { measureQubit } from "../engine/gates/Measurement";
 import useCircuitPlayer from "../components/CircuitPlayer";
 import type { CircuitConfig } from "../engine/types/CircuitConfig";
 import type { Qubit } from "../engine/Qubit";
-
-/*
-Making the circuit generalize:
-  const [slots, setSlots] = useState<Record<string, string[]>> ({
-    "line-1": [],
-    "line-2": [],
-    "line-3": [],
-    "line-4": [],
-  });
-  const lines = [
-    { id: "line-1", name: "q0" },
-    { id: "line-2", name: "q1" },
-    { id: "line-3", name: "q2" },
-    { id: "line-4", name: "q3" },
-  ];
-*/
+import CircuitOverlay from "./CircuitOverlay";
 
 type GateStep = {
   lineId: string;
@@ -68,11 +53,12 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
   const [pending, setPending] = useState<{lineId: string, lineIndex: number, instanceId: string} | null>(null);
   const [showModal, setShowModal] = useState(false);  
   const [measurementResults, setMeasurementResults] = useState<Record<string, Qubit>>({});
+  const circuitContainerRef = useRef<HTMLDivElement>(null)
+  const gateRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const lines = Array.from({ length: config.qubitCount }, (_,i) => ({
     id: `line-${i}`,
     name: `q${i}`,
   }));
-
   const stepsRef = useRef(steps);
   useEffect(() => {
     stepsRef.current = steps;
@@ -86,6 +72,12 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
     isPlaying
   } = useCircuitPlayer(stepsRef, config.qubitCount, setSlots, setMultiSlots, onStepChange);
   
+  // helper to register a gate ref
+  function registerGateRef(instanceId: string, lineIndex: number) {
+    return (el: HTMLDivElement | null) => {
+      gateRefs.current[`${instanceId}-${lineIndex}`] = el
+    }
+  }
   // config.locked is for locking the algo structure
   // filter single and multiqubit gates
   function handleDragEnd(event) {
@@ -409,7 +401,7 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
             {/* Quantum Circuit */}
             <div className="flex flex-col gap-2 h-full">
               {/* Circuit Builder*/}
-              <div className="flex-1 gap-4 p-4 overflow-auto border border-black/20 rounded-lg bg-white">
+              <div ref={circuitContainerRef} className="relative flex-1 gap-4 p-4 border border-black/20 rounded-lg bg-white">
                 <h3 className="pl-2">Quantum Circuit</h3>
                 <div>
                   {lines.map((line) => (
@@ -421,31 +413,29 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
                       let displayName = gateType;
 
                       if (gateType === "CNOT" && metadata) {
-                        if (currentLineIndex === metadata.control) {
-                          displayName = "●";
-                        } else {
-                          displayName = "⊕";
-                        }
+                        displayName = (currentLineIndex === metadata.control) ? "●" : "⊕";
                       } 
                       if (gateType === "T" && metadata) {
-                        const currentLineIndex = lines.findIndex(l => l.id === line.id);
-                        if (currentLineIndex === metadata.target) {
-                          displayName = "⊕";          // target qubit
-                        } else {
-                          displayName = "●";          // control qubits
-                        }
+                        displayName = currentLineIndex === metadata.target ? "⊕" : "●"
                       }
+
                       return (
                         <Gate 
                           key={gateId} 
                           id={gateId} 
                           name={displayName}
+                          ref={registerGateRef(gateId, currentLineIndex)}
                         />
                       );
                     })}
                   </Line>
                 ))}
                 </div>
+                <CircuitOverlay
+                  multiSlots={multiSlots}
+                  gateRefs={gateRefs.current}
+                  containerRef={circuitContainerRef}
+                />
               </div>
               {/* Circuit Player*/}
               <div className="relative flex items-center justify-center p-4 h-24 border border-black/20 rounded-lg bg-white">
