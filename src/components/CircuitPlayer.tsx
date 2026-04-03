@@ -52,6 +52,13 @@ const useCircuitPlayer = (
             };
             newSlots[controlId].push(cnotId);
             newSlots[targetId].push(cnotId);
+
+            // space filler 
+            const min = Math.min(gate.meta.control, gate.meta.target);
+            const max = Math.max(gate.meta.control, gate.meta.target);
+            for (let i = min + 1; i < max; i++){
+              newSlots[`line-${i}`].push(`SPACE-${cnotId}-${i}`);
+            } 
           }
         } else if (gate.gateType === "T"){
           if (gate.meta && gate.meta.control === parseInt(gate.lineId.split("-")[1])) {
@@ -108,15 +115,26 @@ const useCircuitPlayer = (
       const cnotId = `CNOT-${stepIndex}`;
       const controlId = `line-${gate.meta.control}`;
       const targetId = `line-${gate.meta.target}`;
+
       setMultiSlots(prev => ({
         ...prev,
         [cnotId]: { control: gate.meta!.control, target: gate.meta!.target }
       }));
-      setSlots(prev => ({
-        ...prev,
-        [controlId]: [...prev[controlId], cnotId],
-        [targetId]: [...prev[targetId], cnotId],
-      }));
+      // space filler 
+      const min = Math.min(gate.meta.control, gate.meta.target);
+      const max = Math.max(gate.meta.control, gate.meta.target);   
+           
+      setSlots(prev => {
+        const updated = { ...prev };
+        updated[controlId] = [...updated[controlId], cnotId];
+        updated[targetId] = [...updated[targetId], cnotId];
+
+        for (let i = min + 1; i < max; i++){
+          updated[`line-${i}`] = [...updated[`line-${i}`], `SPACE-${cnotId}-${i}`];
+        } 
+        return updated;
+      });
+
     } else if (gate.gateType === "T" && gate.meta) {
       if (gate.meta.control !== parseInt(gate.lineId.split("-")[1])) {
         return;

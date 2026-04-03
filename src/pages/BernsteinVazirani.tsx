@@ -34,9 +34,6 @@ const steps = [
   ],
   [
     { lineId: "line-0", gateType: "CNOT", meta: { control: 0, target: 4 }},
-    { lineId: "line-1", gateType: "" },
-    { lineId: "line-2", gateType: "" },
-    { lineId: "line-3", gateType: "" },
     { lineId: "line-4", gateType: "CNOT", meta: { control: 0, target: 4 }},
   ],
   [
@@ -50,7 +47,6 @@ const steps = [
     { lineId: "line-0", gateType: "" },
     { lineId: "line-1", gateType: "" },
     { lineId: "line-2", gateType: "CNOT", meta: { control: 2, target: 4 }},
-    { lineId: "line-3", gateType: "" },
     { lineId: "line-4", gateType: "CNOT", meta: { control: 2, target: 4 }},
   ],
   [
