@@ -7,7 +7,7 @@ const deutschJozsaConfig: CircuitConfig = {
   algoName: "Deutsch-Jozsa", 
   qubitCount: 4,
   initialState: zeroState(4),
-  allowedGates: ['H', 'I', 'X', 'T', 'M', 'I'],
+  allowedGates: ['H', 'I', 'X', 'T', 'M', ''],
 };
 
 const steps = [
@@ -121,9 +121,12 @@ const steps = [
   ],
   [
     { lineId: "line-0", gateType: "M" },
+  ],
+  [
     { lineId: "line-1", gateType: "M" },
+  ],
+  [
     { lineId: "line-2", gateType: "M" },
-    { lineId: "line-3", gateType: "" },
   ],
 ];
 

@@ -55,6 +55,7 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
   const [measurementResults, setMeasurementResults] = useState<Record<string, Qubit>>({});
   const circuitContainerRef = useRef<HTMLDivElement>(null)
   const gateRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const lineRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const lines = Array.from({ length: config.qubitCount }, (_,i) => ({
     id: `line-${i}`,
     name: `q${i}`,
@@ -71,11 +72,14 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
     reset,
     isPlaying
   } = useCircuitPlayer(stepsRef, config.qubitCount, setSlots, setMultiSlots, onStepChange);
-  
   // helper to register a gate ref
   function registerGateRef(instanceId: string, lineIndex: number) {
-    return (el: HTMLDivElement | null) => {
-      gateRefs.current[`${instanceId}-${lineIndex}`] = el
+    return (element: HTMLDivElement | null) => {
+      if (instanceId.startsWith("M")) {
+        gateRefs.current[`${instanceId}`] = element;
+      } else {
+        gateRefs.current[`${instanceId}-${lineIndex}`] = element;
+      }
     }
   }
   // config.locked is for locking the algo structure
@@ -405,51 +409,55 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
                 <h3 className="pl-2">Quantum Circuit</h3>
                 <div>
                   {lines.map((line) => (
-                    <Line key={line.id} id={line.id} name={line.name}>
-                      {slots[line.id].map((gateId) => {
-                        const gateType = gateId.split("-")[0];
-                        const metadata = multiSlots[gateId];
-                        const currentLineIndex = lines.findIndex(l => l.id === line.id);
-                        let displayName = gateType;
-                      
-                        if (gateType === "CNOT" && metadata) {
-                          displayName = (currentLineIndex === metadata.control) ? "●" : "⊕";
-                        } 
-                        if (gateType === "T" && metadata) {
-                          displayName = currentLineIndex === metadata.target ? "⊕" : "●"
-                        }
-                        if (gateId.startsWith("SPACE")) {
-                          return (
-                            <div
-                              key={gateId}
-                              style={{
-                                width: "35px",
-                                height: "35px",
-                                flexShrink: 0,
-                                visibility: "hidden",
-                                pointerEvents: "none",
-                                //border: "1px solid red"
-                              }}
-                            />
-                          )
-                        }
+                    <div key={line.id} ref={element => { lineRefs.current[line.id] = element }}>
+                      <Line id={line.id} name={line.name} >
+                        {slots[line.id].map((gateId) => {
+                          const gateType = gateId.split("-")[0];
+                          const metadata = multiSlots[gateId];
+                          const currentLineIndex = lines.findIndex(l => l.id === line.id);
+                          let displayName = gateType;
                         
-                        return (
-                          <Gate 
-                            key={gateId} 
-                            id={gateId} 
-                            name={displayName}
-                            ref={registerGateRef(gateId, currentLineIndex)}
-                          />
-                        );
-                      })}
-                    </Line>
+                          if (gateType === "CNOT" && metadata) {
+                            displayName = (currentLineIndex === metadata.control) ? "●" : "⊕";
+                          } 
+                          if (gateType === "T" && metadata) {
+                            displayName = currentLineIndex === metadata.target ? "⊕" : "●"
+                          }
+                          if (gateId.startsWith("SPACE")) {
+                            return (
+                              <div
+                                key={gateId}
+                                style={{
+                                  width: "35px",
+                                  height: "35px",
+                                  flexShrink: 0,
+                                  visibility: "hidden",
+                                  pointerEvents: "none",
+                                  //border: "1px solid red"
+                                }}
+                              />
+                            )
+                          }
+
+                          return (
+                            <Gate 
+                              key={gateId} 
+                              id={gateId} 
+                              name={displayName}
+                              ref={registerGateRef(gateId, currentLineIndex)}
+                            />
+                          );
+                        })}
+                      </Line>
+                    </div>
                   ))}
                 </div>
                 <CircuitOverlay
                   multiSlots={multiSlots}
                   gateRefs={gateRefs.current}
                   containerRef={circuitContainerRef}
+                  lineRefs={lineRefs.current}
+                  qubitCount={config.qubitCount}
                 />
               </div>
               {/* Circuit Player*/}

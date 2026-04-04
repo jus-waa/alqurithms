@@ -17,7 +17,7 @@ const useCircuitPlayer = (
   stepsRef: React.MutableRefObject<Step[]>, 
   qubitCount: number, 
   setSlots: React.Dispatch<React.SetStateAction<Slots>>,
-  setMultiSlots: React.Dispatch<React.SetStateAction<Record<string, { control: number; control2?: number, control3?: number, target: number; }>>>,
+  setMultiSlots: React.Dispatch<React.SetStateAction<Record<string, { control: number; control2?: number, control3?: number, target: number, measurement?: number}>>>,
   onStepChange?: (step: number) => Promise<void> | void
 ) => {
   const isPausedRef = useRef(false);
@@ -38,9 +38,6 @@ const useCircuitPlayer = (
       const step = stepsRef.current[i];
 
       for (const gate of step) {
-        const instanceId = `${gate.gateType}-${i}-${gate.lineId}`;
-        // only push once — for CNOT, both lines share the same instanceId
-        // so use control line as the canonical push point
         if (gate.gateType === "CNOT") {
           if (gate.meta && gate.meta.control === parseInt(gate.lineId.split("-")[1])) {
             const controlId = `line-${gate.meta.control}`;
@@ -60,7 +57,7 @@ const useCircuitPlayer = (
               newSlots[`line-${i}`].push(`SPACE-${cnotId}-${i}`);
             } 
           }
-        } else if (gate.gateType === "T"){
+        } else if (gate.gateType === "T") {
           if (gate.meta && gate.meta.control === parseInt(gate.lineId.split("-")[1])) {
             const controlId = `line-${gate.meta.control}`;
             const control2Id = `line-${gate.meta.control2}`;
@@ -77,10 +74,17 @@ const useCircuitPlayer = (
             newSlots[control2Id].push(toffoliId);
             newSlots[control3Id].push(toffoliId);
             newSlots[targetId].push(toffoliId);
-
+          }
+        } else if (gate.gateType === "M") {
+          const lineIndex = parseInt(gate.lineId.split("-")[1]);
+          const measurementId = `M-${i}`; //tandaan this i is stepIndex
+          newSlots[gate.lineId].push(measurementId);
+          newMultiSlots[measurementId] = { control: lineIndex, target: lineIndex }; 
+          for (let i = lineIndex + 1; i < qubitCount; i++) {
+            newSlots[`line-${i}`].push(`SPACE-${measurementId}-${i}`);
           }
         } else {
-          newSlots[gate.lineId].push(instanceId);
+          newSlots[gate.lineId].push(`${gate.gateType}-${i}`);
         }
       }
     }
@@ -118,7 +122,10 @@ const useCircuitPlayer = (
 
       setMultiSlots(prev => ({
         ...prev,
-        [cnotId]: { control: gate.meta!.control, target: gate.meta!.target }
+        [cnotId]: { 
+          control: gate.meta!.control, 
+          target: gate.meta!.target 
+        }
       }));
       // space filler 
       const min = Math.min(gate.meta.control, gate.meta.target);
@@ -144,14 +151,17 @@ const useCircuitPlayer = (
       const control2Id = `line-${gate.meta.control2}`;
       const control3Id = `line-${gate.meta.control3}`;
       const targetId = `line-${gate.meta.target}`;
+
       setMultiSlots(prev => ({
         ...prev,
-        [toffoliId]: { control: gate.meta!.control,
-           control2: gate.meta!.control2,
-           control3: gate.meta!.control3,
+        [toffoliId]: { 
+          control: gate.meta!.control,
+          control2: gate.meta!.control2,
+          control3: gate.meta!.control3,
           target: gate.meta!.target
         }
       }));
+
       setSlots(prev => ({
         ...prev,
         [controlId]: [...prev[controlId], toffoliId],
@@ -159,11 +169,22 @@ const useCircuitPlayer = (
         [control3Id]: [...prev[control3Id], toffoliId],
         [targetId]: [...prev[targetId], toffoliId],
       }));
+    } else if (gate.gateType === "M") {
+      const lineIndex = parseInt(gate.lineId.split("-")[1]);
+      const measurementId = `M-${stepIndex}`; 
+      setMultiSlots(prev => ({ ...prev, [measurementId]: { control: lineIndex, target: lineIndex }}));
+      setSlots(prev => {
+        const updated = { ...prev };
+        updated[gate.lineId] = [...updated[gate.lineId], measurementId];
+        for (let i = lineIndex + 1; i < qubitCount; i++) {
+          updated[`line-${i}`] = [...updated[`line-${i}`], `SPACE-${measurementId}-${i}`];
+        }
+        return updated;
+      });
     } else {
       setSlots(prev => {
         const copy = {...prev};
-        const instanceId = `${gate.gateType}-${stepIndex}-${gate.lineId}`;
-        copy[gate.lineId] = [...copy[gate.lineId], instanceId];
+        copy[gate.lineId] = [...copy[gate.lineId], `${gate.gateType}-${stepIndex}`];
         return copy;
       });
     }

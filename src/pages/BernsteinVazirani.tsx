@@ -72,10 +72,15 @@ const steps = [
   ],
   [
     { lineId: "line-0", gateType: "M" },
+  ],
+  [
     { lineId: "line-1", gateType: "M" },
+  ],
+  [
     { lineId: "line-2", gateType: "M" },
+  ],
+  [
     { lineId: "line-3", gateType: "M" },
-    { lineId: "line-4", gateType: "" },
   ],
 ];
 

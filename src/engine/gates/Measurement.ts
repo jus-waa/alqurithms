@@ -5,9 +5,9 @@ import type { Qubit } from '../Qubit';
 // targetQubit is speific qubit num ex. 3 qubit; q0, q1, q2 == 0, 1, 2
 // numQubits only for clarity/future use 
 // reuslt will only be 0 or 1
-export function measureQubit(
-  state: Qubit,
-  targetQubit: number,
+export function measureQubit( 
+  state: Qubit, 
+  targetQubit: number, 
   numQubits: number
 ): { result: 0 | 1; newState: Qubit } {
   // q0 least sig

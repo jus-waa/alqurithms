@@ -6,22 +6,26 @@ interface MultiSlotMeta {
   control2?: number;
   control3?: number;
   target: number;
+  measurement?: number;
 }
 
 interface CircuitOverlayProps {
   multiSlots: Record<string, MultiSlotMeta>;
   gateRefs: Record<string, HTMLDivElement | null>;
   containerRef: React.RefObject<HTMLDivElement | null>;
+  lineRefs: Record<string, HTMLDivElement | null>;
+  qubitCount: number;
 }
 
 interface ConnectorLine {
   x: number;
   y1: number;
   y2: number;
-  passThroughYs: number[];
+  passThroughYs?: number[];
+  isDoubleLine?: boolean;
 }
 
-export default function CircuitOverlay({ multiSlots, gateRefs, containerRef }: CircuitOverlayProps) {
+export default function CircuitOverlay({ multiSlots, gateRefs, containerRef, lineRefs, qubitCount}: CircuitOverlayProps) {
   const [lines, setLines] = useState<ConnectorLine[]>([]);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
@@ -39,23 +43,35 @@ export default function CircuitOverlay({ multiSlots, gateRefs, containerRef }: C
     for (const [instanceId, meta] of Object.entries(multiSlots)) {
       //console.log(instanceId, meta);
       const gateType = instanceId.split("-")[0];
-      // get actual gate div
-      const controlElement = gateRefs[`${instanceId}-${meta.control}`];
-      const targetElement = gateRefs[`${instanceId}-${meta.target}`];
-      // console.log("control", controlElement);
-      if (!controlElement || !targetElement) continue;
 
-      // pos and size of where container is and where control and target gat eis 
-      const cRect = controlElement.getBoundingClientRect();
-      const tRect = targetElement.getBoundingClientRect();
+      if (gateType == "CNOT") {
+        const controlElement = gateRefs[`${instanceId}-${meta.control}`];
+        const targetElement = gateRefs[`${instanceId}-${meta.target}`];
+        // console.log("control", controlElement);
+        if (!controlElement || !targetElement) continue;
 
-      const x = cRect.left - containerRect.left + cRect.width / 2;
-      const y1 = cRect.top - containerRect.top + cRect.height / 2;
-      const y2 = tRect.top - containerRect.top + tRect.height / 2;
+        // pos and size of where container is and where control and target gat eis 
+        const cRect = controlElement.getBoundingClientRect();
+        const tRect = targetElement.getBoundingClientRect();
 
-      // for Toffoli, collect intermediate control y positions
-      const passThroughYs: number[] = [];
-      if (gateType === "T") {
+        const x = cRect.left - containerRect.left + cRect.width / 2;
+        const y1 = cRect.top - containerRect.top + cRect.height / 2;
+        const y2 = tRect.top - containerRect.top + tRect.height / 2;
+
+        computedLines.push({ x, y1, y2 });
+
+      } else if (gateType === "T") {
+        const controlElement = gateRefs[`${instanceId}-${meta.control}`];
+        const targetElement = gateRefs[`${instanceId}-${meta.target}`];
+        if (!controlElement || !targetElement) continue;
+
+        const cRect = controlElement.getBoundingClientRect();
+        const tRect = targetElement.getBoundingClientRect();
+
+        const x = cRect.left - containerRect.left + cRect.width / 2;
+        const y1 = cRect.top - containerRect.top + cRect.height / 2;
+        const y2 = tRect.top - containerRect.top + tRect.height / 2;
+        const passThroughYs: number[] = [];
         for (const key of ["control2", "control3"] as const) {
           const i = meta[key];
           if (i === undefined) {
@@ -69,11 +85,23 @@ export default function CircuitOverlay({ multiSlots, gateRefs, containerRef }: C
           const pos = element.getBoundingClientRect();
           passThroughYs.push(pos.top - containerRect.top + pos.height / 2);
         }
+        computedLines.push({ x, y1, y2, passThroughYs });
+      } else if (gateType === "M") {
+        const measurementElement = gateRefs[`${instanceId}`];
+        if (!measurementElement) continue;
+        const lastLineElement = lineRefs[`line-${qubitCount - 1}`];
+        if (!lastLineElement) continue;
+        const lastRect = lastLineElement.getBoundingClientRect();
+        const mRect = measurementElement.getBoundingClientRect();
+        const x = mRect.left - containerRect.left + mRect.width / 2;
+        const y1 = mRect.top - containerRect.top + mRect.height / 2;
+        const y2 = lastRect.top - containerRect.top + lastRect.height / 2;
+        const isDoubleLine = true;
+        computedLines.push({ x, y1, y2, isDoubleLine });
       }
-      computedLines.push({ x, y1, y2, passThroughYs });
     }
     setLines(computedLines);
-  }, [multiSlots, gateRefs, containerRef]);
+  }, [multiSlots, gateRefs, containerRef, lineRefs, qubitCount]);
   // if no lines dont render
   if (lines.length === 0) return null
   return (
@@ -90,16 +118,41 @@ export default function CircuitOverlay({ multiSlots, gateRefs, containerRef }: C
       }}
     >
       {lines.map((line, i) => (
-        <line
-          key={i}
-          x1={line.x}
-          y1={line.y1}
-          x2={line.x}
-          y2={line.y2}
-          stroke="black"
-          strokeWidth={1.5}
-          opacity={0.8}
-        />
+        line.isDoubleLine ? (
+          <>
+            <line
+              key={`${i}-a`}
+              x1={line.x - 3}
+              y1={line.y1}
+              x2={line.x - 3}
+              y2={line.y2}
+              stroke="black"
+              strokeWidth={1.5}
+              opacity={0.8}
+            />
+            <line
+              key={i}
+              x1={line.x + 3}
+              y1={line.y1}
+              x2={line.x + 3}
+              y2={line.y2}
+              stroke="black"
+              strokeWidth={1.5}
+              opacity={0.8}
+            />
+          </>
+        ) : (
+          <line
+            key={i}
+            x1={line.x}
+            y1={line.y1}
+            x2={line.x}
+            y2={line.y2}
+            stroke="black"
+            strokeWidth={1.5}
+            opacity={0.8}
+          />
+        )
       ))}
     </svg>
   )

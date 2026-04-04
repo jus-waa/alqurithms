@@ -37,4 +37,4 @@ const Line = ( {id, name, children}: LineProps ) => {
   )
 }
 
-export default Line
+export default Line;
