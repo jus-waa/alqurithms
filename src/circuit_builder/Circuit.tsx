@@ -3,9 +3,9 @@ import { DndContext} from '@dnd-kit/core'
 
 import Line from "./Line"
 import Gate from './Gate'
-import Probabilities from "./Probabilities";
-import MultiQubitModal from "./MultiQubitModal";
-import QSphere from "./QSphere";
+import Probabilities from "../components/Probabilities";
+import MultiQubitModal from "../components/MultiQubitModal";
+import QSphere from "../components/QSphere";
 
 import { applyHadamardToQubit } from "../engine/gates/Hadamard";
 import { applyPauliXToQubit } from "../engine/gates/PauliX";
@@ -15,10 +15,10 @@ import { applyPauliIToQubit } from "../engine/gates/PauliI";
 import { applyPauliZToQubit } from "../engine/gates/PauliZ";
 import { applyBarrierToQubit } from "../engine/gates/Barrier";
 import { measureQubit } from "../engine/gates/Measurement";
-import useCircuitPlayer from "../components/CircuitPlayer";
+import useCircuitPlayer from "../tve_framework/trace/CircuitPlayer";
 import type { CircuitConfig } from "../engine/types/CircuitConfig";
-import type { Qubit } from "../engine/Qubit";
-import CircuitOverlay from "./CircuitOverlay";
+import type { Qubit } from "../engine/qubit/Qubit";
+import VerticalLines from "../tve_framework/trace/VerticalLines";
 
 type GateStep = {
   lineId: string;
@@ -452,7 +452,7 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
                     </div>
                   ))}
                 </div>
-                <CircuitOverlay
+                <VerticalLines
                   multiSlots={multiSlots}
                   gateRefs={gateRefs.current}
                   containerRef={circuitContainerRef}

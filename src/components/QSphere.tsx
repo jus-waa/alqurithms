@@ -1,6 +1,6 @@
 import { Text, OrbitControls, Line } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import type { Qubit } from '../engine/Qubit';
+import type { Qubit } from '../engine/qubit/Qubit';
 
 function binomial(n: number, k: number): number {
   if (k === 0 || k === n) return 1;

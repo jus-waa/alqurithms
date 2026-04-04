@@ -1,4 +1,4 @@
-import type { Qubit } from '../Qubit';
+import type { Qubit } from '../qubit/Qubit';
 
 //barrier ,included targetQubit for expected argument sa circuit
 export function applyBarrierToQubit(state: Qubit, targetQubit: number): Qubit {

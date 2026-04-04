@@ -1,4 +1,4 @@
-import type { Qubit } from '../Qubit';
+import type { Qubit } from '../qubit/Qubit';
 //note: you still havent used this
 export const hadamardMatrix: number[][] = [
   [1 / Math.sqrt(2), 1 / Math.sqrt(2)],

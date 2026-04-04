@@ -1,6 +1,6 @@
 import Layout from '../components/Layout'
-import Circuit from '../components/Circuit'
-import { zeroState } from '../engine/Qubit';
+import Circuit from '../circuit_builder/Circuit'
+import { zeroState } from '../engine/qubit/Qubit';
 import type { CircuitConfig } from '../engine/types/CircuitConfig';
 
 const bernsteinVaziraniConfig: CircuitConfig = {

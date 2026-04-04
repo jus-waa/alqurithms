@@ -1,5 +1,5 @@
 // measurementgate.ts
-import type { Qubit } from '../Qubit';
+import type { Qubit } from '../qubit/Qubit';
 
 // state is the arr of num of prob amplitudes of all possible qubit combination
 // targetQubit is speific qubit num ex. 3 qubit; q0, q1, q2 == 0, 1, 2

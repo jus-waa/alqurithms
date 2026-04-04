@@ -1,4 +1,4 @@
-import type { Qubit } from '../Qubit';
+import type { Qubit } from '../qubit/Qubit';
 
 export const PauliIMatrix: number[][] = [
   [1, 0],
