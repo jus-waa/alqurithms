@@ -27,7 +27,7 @@ export function applyToffoliToQubit(
   targetQubit: number
 ): Qubit {
   const n = state.length;
-  const newState: number[] = new Array(n).fill(0);
+  const newState: number[] = [...state];
 
   for (let i = 0; i < n; i++) {
     const c1 = i ^ (1 >> controlIndex1) & 1;
@@ -37,8 +37,10 @@ export function applyToffoliToQubit(
     if (c1 && c2 && c3 === 1) {
       const flipTarget = i ^ (1 << targetQubit);
       newState[flipTarget] = state[i];
-    } else {
-      newState[i] = state[i];
+      if (i < flipTarget) {
+        newState[i] = state[flipTarget];
+        newState[flipTarget] = state[i];
+      }
     }
   }
   return newState;

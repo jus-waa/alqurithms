@@ -14,31 +14,32 @@ const deutschConfig: CircuitConfig = {
 const Deutsch = () => {
   const [showOracleModal, setShowOracleModal] = useState(false);
   const resolveRef = useRef<(() => void) | null>(null);
-  const [steps, setSteps] = useState([
-    [
-      { lineId: "line-0", gateType: "H" },
-      { lineId: "line-1", gateType: "X" },
-    ],
-    [
-      { lineId: "line-0", gateType: "" },
-      { lineId: "line-1", gateType: "H" },
-    ],
-    [
-      { lineId: "line-0", gateType: "" },
-      { lineId: "line-1", gateType: "" },
-    ],
-    [
-      { lineId: "line-0", gateType: "H" },
-      { lineId: "line-1", gateType: "I" },
-    ],
-    [
-      { lineId: "line-0", gateType: "" },
-      { lineId: "line-1", gateType: "" },
-    ],
-    [
-      { lineId: "line-0", gateType: "M" },
-    ]
-  ]);
+  const initialSteps = useRef([
+  [
+    { lineId: "line-0", gateType: "H" },
+    { lineId: "line-1", gateType: "X" },
+  ],
+  [
+    { lineId: "line-0", gateType: "" },
+    { lineId: "line-1", gateType: "H" },
+  ],
+  [
+    { lineId: "line-0", gateType: "" },
+    { lineId: "line-1", gateType: "" },
+  ],
+  [
+    { lineId: "line-0", gateType: "" },
+    { lineId: "line-1", gateType: "" },
+  ],
+  [
+    { lineId: "line-0", gateType: "H" },
+    { lineId: "line-1", gateType: "I" },
+  ],
+  [
+    { lineId: "line-0", gateType: "M" },
+  ]
+]);
+  const [steps, setSteps] = useState(initialSteps.current);
 
   async function handleStep(step: number) {
     if (step === 3) {
@@ -102,16 +103,15 @@ const Deutsch = () => {
       ];
     }
 
-    setSteps(prev => [
-      prev[0],
-      prev[1],
-      prev[2],
-      ...oracleGateStep,
-      prev[prev.length - 4],
-      prev[prev.length - 3],
-      prev[prev.length - 2],
-      prev[prev.length - 1], 
-    ]);
+    setSteps([
+  initialSteps.current[0],
+  initialSteps.current[1],
+  initialSteps.current[2],
+  ...oracleGateStep,
+  initialSteps.current[3],
+  initialSteps.current[4],
+  initialSteps.current[5],
+]);
 
     if (resolveRef.current) {
       resolveRef.current();

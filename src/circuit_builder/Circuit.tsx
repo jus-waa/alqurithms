@@ -52,8 +52,7 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
   const [multiSlots, setMultiSlots] = useState<Record<string, Metadata>>({});
   const [pending, setPending] = useState<{lineId: string, lineIndex: number, instanceId: string} | null>(null);
   const [showModal, setShowModal] = useState(false);  
-  const [measurementResults, setMeasurementResults] = useState<Record<string, Qubit>>({});
-  const circuitContainerRef = useRef<HTMLDivElement>(null)
+  const measurementResultsRef = useRef<Record<string, Qubit>>({});  const circuitContainerRef = useRef<HTMLDivElement>(null)
   const gateRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const lineRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const lines = Array.from({ length: config.qubitCount }, (_,i) => ({
@@ -69,9 +68,13 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
     pause: handlePause,
     stepForward,
     stepBack,
-    reset,
+    reset: resetPlayer,
     isPlaying
   } = useCircuitPlayer(stepsRef, config.qubitCount, setSlots, setMultiSlots, onStepChange);
+  function reset() {
+    measurementResultsRef.current = {};
+    resetPlayer();
+  }
   // helper to register a gate ref
   function registerGateRef(instanceId: string, lineIndex: number) {
     return (element: HTMLDivElement | null) => {
@@ -96,15 +99,6 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
   }
 
   function handleSingleQubitGates(active, over) {
-    const gateType = active.id.split("-")[0];
-    // clear measurement result if M gate is being moved or removed
-    if (gateType === "M") {
-      setMeasurementResults(prev => {
-        const updated = { ...prev };
-        delete updated[active.id];
-        return updated;
-      });
-    }
     setSlots((prev) => {
       let qubitLine: string | null = null;
      
@@ -140,14 +134,6 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
       if (!updated[over.id].includes(instanceId)) {
         updated[over.id] = [...updated[over.id], instanceId];
       }
-      return updated;
-    });
-    setMeasurementResults(prev => {
-      const updated = { ...prev };
-      Object.keys(updated).forEach(id => {
-        const stillInCircuit = Object.values(slots).some(line => line.includes(id));
-        if (!stillInCircuit) delete updated[id];
-      });
       return updated;
     });
   }
@@ -304,6 +290,9 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
   }
 
   function executeCircuit() {
+  measurementResultsRef.current = {};
+  console.log("slots:", JSON.stringify(slots));
+  console.log("multiSlots:", JSON.stringify(multiSlots));
   let currentState: Qubit = [...config.initialState];
   const maxGates = Math.max(...Object.values(slots).map(gates => gates.length), 0);
 
@@ -344,18 +333,24 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
           )
         }
       } else if (gateType === "M") {
-        if (measurementResults[gateId]) {
-          colState = measurementResults[gateId];
+        console.log("State before measurement:", JSON.stringify(colState)); 
+        if (measurementResultsRef.current[gateId]) {
+          colState = measurementResultsRef.current[gateId];
         } else {
-          const { newState } = measureQubit(colState, lineIndex, config.qubitCount);
-          setMeasurementResults(prev => ({ ...prev, [gateId]: newState }));
+          const { newState} = measureQubit(colState, lineIndex, config.qubitCount);
+          console.log("result:", );
+          console.log("state after measurement:", JSON.stringify(newState));
+          measurementResultsRef.current[gateId] = newState;
           colState = newState;
         }
       }
     });
     currentState = colState;
+    console.log(`After col ${col}:`, JSON.stringify(currentState)); 
   }
+  console.log("FINAL STATE BEFORE SETSTATE:", JSON.stringify(currentState));
   setState(currentState);
+  console.log("FINAL STATE:", JSON.stringify(currentState));
 }
   // execute everytime a gate is dropped in the slot
   useEffect(() => {

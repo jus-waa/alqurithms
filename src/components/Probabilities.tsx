@@ -15,8 +15,13 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 const Probabilities = ({ state } : { state: Qubit }) => {
   const dimension = state.length;
   const qubitCount = Math.log2(dimension);
-  const prob = state.map((amp: number) => Math.pow(Math.abs(amp), 2) * 100);  
-  const labels = Array.from({ length:  dimension }, (_, i) => i.toString(2).padStart(qubitCount, "0"));
+  const entries = Array.from({ length: dimension }, (_, i) => ({
+    label: i.toString(2).padStart(qubitCount, "0"),
+    prob: Math.pow(Math.abs(state[i] as number), 2) * 100
+  })).sort((a, b) => a.label.localeCompare(b.label));
+  
+  const labels = entries.map(e => e.label);
+  const prob = entries.map(e => e.prob);
   const options = {
     responsive: true,
     maintainAspectRatio: true,

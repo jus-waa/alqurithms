@@ -9,7 +9,7 @@ interface MultiSlotMeta {
   measurement?: number;
 }
 
-interface CircuitOverlayProps {
+interface VerticalLinesProps {
   multiSlots: Record<string, MultiSlotMeta>;
   gateRefs: Record<string, HTMLDivElement | null>;
   containerRef: React.RefObject<HTMLDivElement | null>;
@@ -25,7 +25,7 @@ interface ConnectorLine {
   isDoubleLine?: boolean;
 }
 
-export default function CircuitOverlay({ multiSlots, gateRefs, containerRef, lineRefs, qubitCount}: CircuitOverlayProps) {
+export default function VerticalLines({ multiSlots, gateRefs, containerRef, lineRefs, qubitCount}: VerticalLinesProps) {
   const [lines, setLines] = useState<ConnectorLine[]>([]);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
