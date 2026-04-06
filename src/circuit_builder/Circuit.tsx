@@ -19,7 +19,9 @@ import useCircuitPlayer from "../tve_framework/trace/CircuitPlayer";
 import type { CircuitConfig } from "../engine/types/CircuitConfig";
 import type { Qubit } from "../engine/qubit/Qubit";
 import VerticalLines from "../tve_framework/trace/VerticalLines";
-
+import { verifyDeutschStep } from "../tve_framework/verification/DeutschVerification.ts";
+import type { DeutschFunction, VerificationResult } from "../tve_framework/verification/DeutschVerification.ts";
+import Verification from "../tve_framework/verification/Verification";
 type GateStep = {
   lineId: string;
   gateType: string;
@@ -39,10 +41,11 @@ interface Metadata {
 interface CircuitProps {
   config: CircuitConfig;
   steps: GateStep[][];
+  selectedFunction?: DeutschFunction;
   onStepChange?: (step: number) => Promise<void> | void;
 }
 
-const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
+const Circuit = ( {config, steps, selectedFunction, onStepChange }:CircuitProps) => {
   const [state, setState] = useState(config.initialState) //e.g. ket0000 = 0000
   const [slots, setSlots] = useState<Record<string, string[]>> (
     Object.fromEntries(
@@ -52,6 +55,11 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
   const [multiSlots, setMultiSlots] = useState<Record<string, Metadata>>({});
   const [pending, setPending] = useState<{lineId: string, lineIndex: number, instanceId: string} | null>(null);
   const [showModal, setShowModal] = useState(false);  
+
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
+  const [currentVerifyStep, setCurrentVerifyStep] = useState(0);
+  const currentStateRef = useRef<Qubit>(config.initialState);
+
   const measurementResultsRef = useRef<Record<string, Qubit>>({});  const circuitContainerRef = useRef<HTMLDivElement>(null)
   const gateRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const lineRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -70,7 +78,13 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
     stepBack,
     reset: resetPlayer,
     isPlaying
-  } = useCircuitPlayer(stepsRef, config.qubitCount, setSlots, setMultiSlots, onStepChange);
+  } = useCircuitPlayer(stepsRef, config.qubitCount, setSlots, setMultiSlots, handleStepChangeWrapper);
+  
+  async function handleStepChangeWrapper(step: number) {
+    setCurrentVerifyStep(step);
+    if (onStepChange) await onStepChange(step);
+  }
+
   function reset() {
     measurementResultsRef.current = {};
     resetPlayer();
@@ -290,68 +304,116 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
   }
 
   function executeCircuit() {
-  measurementResultsRef.current = {};
-  console.log("slots:", JSON.stringify(slots));
-  console.log("multiSlots:", JSON.stringify(multiSlots));
-  let currentState: Qubit = [...config.initialState];
-  const maxGates = Math.max(...Object.values(slots).map(gates => gates.length), 0);
+    console.log("slots:", JSON.stringify(slots));
+    console.log("multiSlots:", JSON.stringify(multiSlots));
+    let currentState: Qubit = [...config.initialState];
+    const maxGates = Math.max(...Object.values(slots).map(gates => gates.length), 0);
 
-  for (let col = 0; col < maxGates; col++) {
-    let colState: Qubit = [...currentState];
+    // Track WHICH lines have measurement gates, rather than the immediate result
+    const measuredBits: number[] = [];
 
-    lines.forEach((line, lineIndex) => {
-      const gatesOnLine = slots[line.id];
-      const gateId = gatesOnLine[col];
-      if (!gateId) return;
+    for (let col = 0; col < maxGates; col++) {
+      let colState: Qubit = [...currentState];
 
-      const gateType = gateId.split("-")[0];
+      lines.forEach((line, lineIndex) => {
+        const gatesOnLine = slots[line.id];
+        const gateId = gatesOnLine[col];
+        if (!gateId) return;
 
-      if (gateType === "H") {
-        colState = applyHadamardToQubit(colState, lineIndex);
-      } else if (gateType === "I") {
-        colState = applyPauliIToQubit(colState, lineIndex);
-      } else if (gateType === "X") {
-        colState = applyPauliXToQubit(colState, lineIndex);
-      } else if (gateType === "Z") {
-        colState = applyPauliZToQubit(colState, lineIndex);
-      } else if (gateType === "") {
-        colState = applyBarrierToQubit(colState, lineIndex);
-      } else if (gateType === "CNOT") {
-        const metadata = multiSlots[gateId];
-        if (metadata && lineIndex === metadata.control) {
-          colState = applyCNOTToQubit(colState, metadata.control, metadata.target);
+        const gateType = gateId.split("-")[0];
+
+        if (gateType === "H") {
+          colState = applyHadamardToQubit(colState, lineIndex);
+        } else if (gateType === "I") {
+          colState = applyPauliIToQubit(colState, lineIndex);
+        } else if (gateType === "X") {
+          colState = applyPauliXToQubit(colState, lineIndex);
+        } else if (gateType === "Z") {
+          colState = applyPauliZToQubit(colState, lineIndex);
+        } else if (gateType === "") {
+          colState = applyBarrierToQubit(colState, lineIndex);
+        } else if (gateType === "CNOT") {
+          const metadata = multiSlots[gateId];
+          if (metadata && lineIndex === metadata.control) {
+            colState = applyCNOTToQubit(colState, metadata.control, metadata.target);
+          }
+        } else if (gateType === "T") {
+          const metadata = multiSlots[gateId];
+          if (metadata && lineIndex === metadata.control && metadata.control2 !== undefined && metadata.control3 !== undefined) {
+            colState = applyToffoliToQubit(
+              colState,
+              metadata.control,
+              metadata.control2,
+              metadata.control3,
+              metadata.target
+            )
+          }
+        } else if (gateType === "M") {
+          // We DO NOT collapse colState here. We keep the mathematical state pure
+          // so step-by-step verification can properly evaluate superpositions.
+          // We only record that this qubit is being measured for the final histogram.
+          if (!measuredBits.includes(lineIndex)) {
+            measuredBits.push(lineIndex);
+          }
         }
-      } else if (gateType === "T") {
-        const metadata = multiSlots[gateId];
-        if (metadata && lineIndex === metadata.control && metadata.control2 !== undefined && metadata.control3 !== undefined) {
-          colState = applyToffoliToQubit(
-            colState,
-            metadata.control,
-            metadata.control2,
-            metadata.control3,
-            metadata.target
-          )
-        }
-      } else if (gateType === "M") {
-        console.log("State before measurement:", JSON.stringify(colState)); 
-        if (measurementResultsRef.current[gateId]) {
-          colState = measurementResultsRef.current[gateId];
-        } else {
-          const { newState} = measureQubit(colState, lineIndex, config.qubitCount);
-          console.log("result:", );
-          console.log("state after measurement:", JSON.stringify(newState));
-          measurementResultsRef.current[gateId] = newState;
-          colState = newState;
-        }
+      });
+      currentState = colState;
+    }
+    
+    currentStateRef.current = currentState;
+
+    // --- IBM 1024 SHOTS HISTOGRAM EMULATION ---
+    if (measuredBits.length > 0) {
+      const shots = 1024;
+      const counts: Record<number, number> = {};
+
+      // 1. Calculate cumulative probabilities from the pure final state
+      const cumProbs = new Array(currentState.length).fill(0);
+      let sum = 0;
+      for (let i = 0; i < currentState.length; i++) {
+        // Probability = |amplitude|^2
+        sum += currentState[i] * currentState[i]; 
+        cumProbs[i] = sum;
       }
-    });
-    currentState = colState;
-    console.log(`After col ${col}:`, JSON.stringify(currentState)); 
+
+      // 2. Run 1024 simulated shots based on those probabilities
+      for (let s = 0; s < shots; s++) {
+        // Generate a random number between 0 and the total sum (~1.0)
+        const rand = Math.random() * sum; 
+        
+        // Find which basis state this random shot falls into
+        let stateIndex = cumProbs.findIndex(p => rand <= p);
+        if (stateIndex === -1) stateIndex = currentState.length - 1;
+
+        // 3. Mask out unmeasured qubits (IBM defaults unmeasured to 0 in the UI)
+        let finalIndex = 0;
+        for (let q = 0; q < config.qubitCount; q++) {
+          if (measuredBits.includes(q)) {
+            // If the q-th bit is 1 in the collapsed stateIndex, set it in finalIndex
+            if ((stateIndex & (1 << q)) !== 0) {
+              finalIndex |= (1 << q);
+            }
+          }
+        }
+
+        // Tally the result
+        counts[finalIndex] = (counts[finalIndex] || 0) + 1;
+      }
+
+      // 4. Create a new state array representing the histogram percentages
+      const histogramState = new Array(currentState.length).fill(0);
+      for (const [key, count] of Object.entries(counts)) {
+        // Your <Probabilities/> component likely plots |amplitude|^2. 
+        // To make the bar equal the percentage, we pass the square root.
+        histogramState[Number(key)] = Math.sqrt(count / shots);
+      }
+
+      setState(histogramState);
+    } else {
+      // If no measurements exist, just show the theoretical state vector
+      setState(currentState);
+    }
   }
-  console.log("FINAL STATE BEFORE SETSTATE:", JSON.stringify(currentState));
-  setState(currentState);
-  console.log("FINAL STATE:", JSON.stringify(currentState));
-}
   // execute everytime a gate is dropped in the slot
   useEffect(() => {
     executeCircuit();
@@ -362,6 +424,15 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
       setSlots(config.presetSlots);
     }
   }, [config])
+  //
+  useEffect(() => {
+    if (!selectedFunction || currentVerifyStep === 0) return;
+    const result = verifyDeutschStep(currentVerifyStep, currentStateRef.current, selectedFunction);
+     // only update on real steps, skip barriers
+    if (result !== null) {
+      setVerificationResult(result);
+    }
+  }, [currentVerifyStep, selectedFunction]);
 
   return (
       <div className="flex flex-col h-full w-full gap-2">
@@ -375,12 +446,10 @@ const Circuit = ( {config, steps, onStepChange }:CircuitProps) => {
           </div>
           {/* Temporary to fillup space (Explanation Box) */}
           <div className="w-full">
-              <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white h-full">
-                <h3 className="pl-2">Explanation Box</h3>
-                {/* List of gates */}
-                <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
-                </div>
-              </div>
+            <div className="flex flex-col gap-2 p-4 border border-black/20 rounded-lg bg-white h-full">
+              <h3 className="pl-2">Verification</h3>
+              <Verification result={verificationResult} currentStep={currentVerifyStep} />
+            </div>
           </div>
         </div>
         {/* Lower part */}

@@ -3,6 +3,7 @@ import Layout from '../components/Layout'
 import Circuit from '../circuit_builder/Circuit'
 import { zeroState } from '../engine/qubit/Qubit';
 import type { CircuitConfig } from '../engine/types/CircuitConfig';
+import type { DeutschFunction } from '../tve_framework/verification/DeutschVerification';
 
 const deutschConfig: CircuitConfig = {
   algoName: "Deutsch", 
@@ -12,6 +13,7 @@ const deutschConfig: CircuitConfig = {
 };
 
 const Deutsch = () => {
+  const [selectedFunction, setSelectedFunction] = useState<DeutschFunction>("f0");
   const [showOracleModal, setShowOracleModal] = useState(false);
   const resolveRef = useRef<(() => void) | null>(null);
   const initialSteps = useRef([
@@ -53,6 +55,7 @@ const Deutsch = () => {
   }
   
   function choose(type: string) {
+    setSelectedFunction(type as DeutschFunction);
     setShowOracleModal(false);
     let oracleGateStep: { 
       lineId: string;
@@ -121,7 +124,7 @@ const Deutsch = () => {
   return (
     <Layout>
       <div className='h-full w-full'>
-        <Circuit config={deutschConfig} steps={steps} onStepChange={handleStep}/>
+        <Circuit config={deutschConfig} steps={steps} onStepChange={handleStep} selectedFunction={selectedFunction}/>
           {showOracleModal && (
             <div className="fixed inset-0 flex items-center justify-center bg-black/50 border z-20">
               <div className="bg-white p-6 rounded-lg flex flex-col gap-3 z-10 border">
