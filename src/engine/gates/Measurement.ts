@@ -5,35 +5,44 @@ import type { Qubit } from '../qubit/Qubit';
 // targetQubit is speific qubit num ex. 3 qubit; q0, q1, q2 == 0, 1, 2
 // numQubits only for clarity/future use 
 // reuslt will only be 0 or 1
-export function measureQubit(state: Qubit, qubitIndex: number, qubitCount: number): { result: number, newState: Qubit } {
-  const n = state.length;
-  
-  // Sum probabilities where qubitIndex bit = 0
+export function measureQubit( 
+  state: Qubit, 
+  targetQubit: number, 
+  numQubits: number
+): { result: 0 | 1; newState: Qubit } {
+  // q0 least sig
+  // probability of measuring 0
+  const dim = state.length;
+  const bitIndex = targetQubit; 
   let prob0 = 0;
-  for (let i = 0; i < n; i++) {
-    if (((i >> qubitIndex) & 1) === 0) {
-      prob0 += state[i] * state[i];
+  for (let i = 0; i < dim; i++) {
+    if (((i >> bitIndex) & 1) === 0) {
+      prob0 += Math.pow(Math.abs(state[i] as number), 2); //prob = |amp|^2
     }
   }
+  // type annotation, then if math.rand < prob0 return 0 else 1
+  const result: 0 | 1 = Math.random() < prob0 ? 0 : 1; // random collapse.
 
-  // Randomly collapse (or deterministic if prob is 0 or 1)
-  const result = Math.random() < prob0 ? 0 : 1;
-
-  // Collapse and renormalize
-  const newState: number[] = new Array(n).fill(0);
+  // renormalization
+  const newState: Qubit = [...state] as Qubit;
   let norm = 0;
 
-  for (let i = 0; i < n; i++) {
-    if (((i >> qubitIndex) & 1) === result) {
-      newState[i] = state[i];
-      norm += state[i] * state[i];
+  for (let i = 0; i < dim; i++) {
+    const bit = (i >> bitIndex) & 1;
+    if (bit !== result) {
+      newState[i] = 0;
+    } else {
+      norm += Math.pow(Math.abs(newState[i] as number), 2);
     }
   }
 
-  const normFactor = Math.sqrt(norm);
-  for (let i = 0; i < n; i++) {
-    newState[i] /= normFactor;
+  const sqrtNorm = Math.sqrt(norm);
+  for (let i = 0; i < dim; i++) {
+    if (newState[i] !== 0) {
+      (newState[i] as number) /= sqrtNorm;
+    }
   }
 
+  console.log(`Measured q${targetQubit}: ${result}, newState:`, newState);
   return { result, newState };
 }
