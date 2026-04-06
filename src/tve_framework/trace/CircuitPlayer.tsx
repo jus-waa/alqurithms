@@ -62,7 +62,7 @@ const useCircuitPlayer = (
             }
           }
         } else if (gate.gateType === "T" && gate.meta) {
-          if (gate.meta.control === parseInt(gate.lineId.split("-")[1])) continue;
+          if (gate.meta.control !== parseInt(gate.lineId.split("-")[1])) continue;
           const controlId = `line-${gate.meta.control}`;
           const control2Id = `line-${gate.meta.control2}`;
           const control3Id = `line-${gate.meta.control3}`;
