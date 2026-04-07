@@ -17,7 +17,7 @@ export function applyPauliXToQubit(state: Qubit, targetQubit: number): Qubit {
     const flippedIndex = i ^ (1 << targetQubit);
 
     newState[flippedIndex] = state[i];
-    console.log('1:', bit);
+    //console.log('1:', bit);
   }
   return newState
 } 

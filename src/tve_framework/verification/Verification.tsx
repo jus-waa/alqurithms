@@ -22,7 +22,6 @@ export default function Verification({ result, currentStep }: Props) {
       </div>
     );
   }
-
   return (
     <div className="flex flex-col h-full gap-3 p-1">
       {/* Step + pass/fail badge */}
@@ -37,7 +36,7 @@ export default function Verification({ result, currentStep }: Props) {
               : "bg-red-100 text-red-700"
           }`}
         >
-          {result.passed ? "✓ VERIFIED" : "✗ MISMATCH"}
+          {result.passed ? "VERIFIED" : "MISMATCH"}
         </span>
       </div>
 

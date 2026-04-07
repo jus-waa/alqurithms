@@ -57,7 +57,7 @@ const Circuit = ( {config, steps, selectedFunction, onStepChange }:CircuitProps)
   const [showModal, setShowModal] = useState(false);  
 
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
-  const [currentVerifyStep, setCurrentVerifyStep] = useState(0);
+  const [currentVerifyStep, setCurrentVerifyStep] = useState(1);
   const currentStateRef = useRef<Qubit>(config.initialState);
 
   const measurementResultsRef = useRef<Record<string, Qubit>>({});  const circuitContainerRef = useRef<HTMLDivElement>(null)
@@ -304,15 +304,19 @@ const Circuit = ( {config, steps, selectedFunction, onStepChange }:CircuitProps)
   }
 
   function executeCircuit() {
-    console.log("slots:", JSON.stringify(slots));
-    console.log("multiSlots:", JSON.stringify(multiSlots));
+    //console.log("slots:", JSON.stringify(slots));
+    //console.log("multiSlots:", JSON.stringify(multiSlots));
+    console.log("=== Initial State ===");
+    config.initialState.forEach((amp, i) => {
+      console.log(`|${i.toString(2).padStart(config.qubitCount, '0')}⟩ : ${amp.toFixed(5)}`);
+    });
     let currentState: Qubit = [...config.initialState];
     const maxGates = Math.max(...Object.values(slots).map(gates => gates.length), 0);
 
-    // Track WHICH lines have measurement gates, rather than the immediate result
     const measuredBits: number[] = [];
 
     for (let col = 0; col < maxGates; col++) {
+      
       let colState: Qubit = [...currentState];
 
       lines.forEach((line, lineIndex) => {
@@ -321,7 +325,7 @@ const Circuit = ( {config, steps, selectedFunction, onStepChange }:CircuitProps)
         if (!gateId) return;
 
         const gateType = gateId.split("-")[0];
-
+      
         if (gateType === "H") {
           colState = applyHadamardToQubit(colState, lineIndex);
         } else if (gateType === "I") {
@@ -346,71 +350,26 @@ const Circuit = ( {config, steps, selectedFunction, onStepChange }:CircuitProps)
               metadata.control2,
               metadata.control3,
               metadata.target
-            )
+            );
           }
+          // not sure kung okay lang to
         } else if (gateType === "M") {
-          // We DO NOT collapse colState here. We keep the mathematical state pure
-          // so step-by-step verification can properly evaluate superpositions.
-          // We only record that this qubit is being measured for the final histogram.
           if (!measuredBits.includes(lineIndex)) {
             measuredBits.push(lineIndex);
           }
         }
+        console.log(`Step ${col}, Gate: ${gateType} on line ${lineIndex}`);
+        colState.forEach((amp, i) => {
+          console.log(`|${i.toString(2).padStart(config.qubitCount, '0')}⟩ : ${amp.toFixed(5)}`);
+        });
       });
       currentState = colState;
     }
-    
+    // not sure kung okay lang to
     currentStateRef.current = currentState;
-
-    // --- IBM 1024 SHOTS HISTOGRAM EMULATION ---
     if (measuredBits.length > 0) {
-      const shots = 1024;
-      const counts: Record<number, number> = {};
-
-      // 1. Calculate cumulative probabilities from the pure final state
-      const cumProbs = new Array(currentState.length).fill(0);
-      let sum = 0;
-      for (let i = 0; i < currentState.length; i++) {
-        // Probability = |amplitude|^2
-        sum += currentState[i] * currentState[i]; 
-        cumProbs[i] = sum;
-      }
-
-      // 2. Run 1024 simulated shots based on those probabilities
-      for (let s = 0; s < shots; s++) {
-        // Generate a random number between 0 and the total sum (~1.0)
-        const rand = Math.random() * sum; 
-        
-        // Find which basis state this random shot falls into
-        let stateIndex = cumProbs.findIndex(p => rand <= p);
-        if (stateIndex === -1) stateIndex = currentState.length - 1;
-
-        // 3. Mask out unmeasured qubits (IBM defaults unmeasured to 0 in the UI)
-        let finalIndex = 0;
-        for (let q = 0; q < config.qubitCount; q++) {
-          if (measuredBits.includes(q)) {
-            // If the q-th bit is 1 in the collapsed stateIndex, set it in finalIndex
-            if ((stateIndex & (1 << q)) !== 0) {
-              finalIndex |= (1 << q);
-            }
-          }
-        }
-
-        // Tally the result
-        counts[finalIndex] = (counts[finalIndex] || 0) + 1;
-      }
-
-      // 4. Create a new state array representing the histogram percentages
-      const histogramState = new Array(currentState.length).fill(0);
-      for (const [key, count] of Object.entries(counts)) {
-        // Your <Probabilities/> component likely plots |amplitude|^2. 
-        // To make the bar equal the percentage, we pass the square root.
-        histogramState[Number(key)] = Math.sqrt(count / shots);
-      }
-
-      setState(histogramState);
+      setState(measureQubit(currentState, measuredBits, config.qubitCount));
     } else {
-      // If no measurements exist, just show the theoretical state vector
       setState(currentState);
     }
   }
@@ -428,6 +387,7 @@ const Circuit = ( {config, steps, selectedFunction, onStepChange }:CircuitProps)
   useEffect(() => {
     if (!selectedFunction || currentVerifyStep === 0) return;
     const result = verifyDeutschStep(currentVerifyStep, currentStateRef.current, selectedFunction);
+    console.log("Verification:", result)
      // only update on real steps, skip barriers
     if (result !== null) {
       setVerificationResult(result);

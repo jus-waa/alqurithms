@@ -1,39 +1,44 @@
 // measurementgate.ts
 import type { Qubit } from '../qubit/Qubit';
 
-// state is the arr of num of prob amplitudes of all possible qubit combination
-// targetQubit is speific qubit num ex. 3 qubit; q0, q1, q2 == 0, 1, 2
-// numQubits only for clarity/future use 
-// reuslt will only be 0 or 1
-export function measureQubit(state: Qubit, qubitIndex: number, qubitCount: number): { result: number, newState: Qubit } {
+export function measureQubit(
+  state: Qubit,
+  measuredBits: number[],
+  qubitCount: number,
+  shots = 1024
+): Qubit {
   const n = state.length;
-  
-  // Sum probabilities where qubitIndex bit = 0
-  let prob0 = 0;
+
+  // Build cumulative probability distribution
+  let sum = 0;
+  const cumProbs = new Array(n).fill(0);
   for (let i = 0; i < n; i++) {
-    if (((i >> qubitIndex) & 1) === 0) {
-      prob0 += state[i] * state[i];
+    sum += state[i] * state[i];
+    cumProbs[i] = sum;
+  }
+
+  // Sample 1024 shots
+  const counts: Record<number, number> = {};
+  for (let s = 0; s < shots; s++) {
+    const rand = Math.random() * sum;
+    let stateIndex = cumProbs.findIndex(p => rand <= p);
+    if (stateIndex === -1) stateIndex = n - 1;
+
+    let finalIndex = 0;
+    for (let q = 0; q < qubitCount; q++) {
+      if (measuredBits.includes(q)) {
+        if ((stateIndex & (1 << q)) !== 0) {
+          finalIndex |= (1 << q);
+        }
+      }
     }
+    counts[finalIndex] = (counts[finalIndex] || 0) + 1;
   }
 
-  // Randomly collapse (or deterministic if prob is 0 or 1)
-  const result = Math.random() < prob0 ? 0 : 1;
-
-  // Collapse and renormalize
-  const newState: number[] = new Array(n).fill(0);
-  let norm = 0;
-
-  for (let i = 0; i < n; i++) {
-    if (((i >> qubitIndex) & 1) === result) {
-      newState[i] = state[i];
-      norm += state[i] * state[i];
-    }
+  // Convert counts back to amplitudes
+  const histogramState = new Array(n).fill(0);
+  for (const [key, count] of Object.entries(counts)) {
+    histogramState[Number(key)] = Math.sqrt(count / shots);
   }
-
-  const normFactor = Math.sqrt(norm);
-  for (let i = 0; i < n; i++) {
-    newState[i] /= normFactor;
-  }
-
-  return { result, newState };
+  return histogramState;
 }
