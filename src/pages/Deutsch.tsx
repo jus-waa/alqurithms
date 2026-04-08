@@ -3,7 +3,7 @@ import Layout from '../components/Layout'
 import Circuit from '../circuit_builder/Circuit'
 import { zeroState } from '../engine/qubit/Qubit';
 import type { CircuitConfig } from '../engine/types/CircuitConfig';
-import type { DeutschFunction } from '../tve_framework/verification/DeutschVerification';
+import { verifyDeutschStep, type DeutschFunction } from '../tve_framework/verification/DeutschVerification';
 
 const deutschConfig: CircuitConfig = {
   algoName: "Deutsch", 
@@ -125,7 +125,11 @@ const Deutsch = () => {
   return (
     <Layout>
       <div className='h-full w-full'>
-        <Circuit config={deutschConfig} steps={steps} onStepChange={handleStep} selectedFunction={selectedFunction}/>
+        <Circuit 
+          config={deutschConfig} 
+          steps={steps} 
+          onStepChange={handleStep} 
+          verifyStep={(step, state) => verifyDeutschStep(step, state, selectedFunction)}/>
           {showOracleModal && (
             <div className="fixed inset-0 flex items-center justify-center bg-black/50 border z-20">
               <div className="bg-white p-6 rounded-lg flex flex-col gap-3 z-10 border">

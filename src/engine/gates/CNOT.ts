@@ -21,7 +21,7 @@ export function applyCNOTToQubit(state: Qubit, controlIndex: number, targetQubit
     if (controlBit === 1) {
       const flipTarget = i ^ (1 << targetQubit);
       newState[flipTarget] = state[i];
-      console.log('1: ', controlBit);
+      //console.log('1: ', controlBit);
     } else {
       newState[i] = state[i];
     }

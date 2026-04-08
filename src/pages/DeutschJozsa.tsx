@@ -12,15 +12,15 @@ const deutschJozsaConfig: CircuitConfig = {
 
 const steps = [
   [
-    { lineId: "line-0", gateType: "H" },
-    { lineId: "line-1", gateType: "H" },
-    { lineId: "line-2", gateType: "H" },
-    { lineId: "line-3", gateType: "X" },
-  ],
-  [
     { lineId: "line-0", gateType: "" },
     { lineId: "line-1", gateType: "" },
     { lineId: "line-2", gateType: "" },
+    { lineId: "line-3", gateType: "X" },
+  ],
+  [
+    { lineId: "line-0", gateType: "H" },
+    { lineId: "line-1", gateType: "H" },
+    { lineId: "line-2", gateType: "H" },
     { lineId: "line-3", gateType: "H" },
   ],
   [

@@ -19,8 +19,7 @@ import useCircuitPlayer from "../tve_framework/trace/CircuitPlayer";
 import type { CircuitConfig } from "../engine/types/CircuitConfig";
 import type { Qubit } from "../engine/qubit/Qubit";
 import VerticalLines from "../tve_framework/trace/VerticalLines";
-import { verifyDeutschStep } from "../tve_framework/verification/DeutschVerification.ts";
-import type { DeutschFunction, VerificationResult } from "../tve_framework/verification/DeutschVerification.ts";
+import type { VerificationResult } from "../tve_framework/verification/DeutschVerification.ts";
 import Verification from "../tve_framework/verification/Verification";
 type GateStep = {
   lineId: string;
@@ -41,11 +40,11 @@ interface Metadata {
 interface CircuitProps {
   config: CircuitConfig;
   steps: GateStep[][];
-  selectedFunction?: DeutschFunction;
+  verifyStep?: (step: number, state: Qubit) => VerificationResult | null;
   onStepChange?: (step: number) => Promise<void> | void;
 }
 
-const Circuit = ( {config, steps, selectedFunction, onStepChange }:CircuitProps) => {
+const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
   const [state, setState] = useState(config.initialState) //e.g. ket0000 = 0000
   const [slots, setSlots] = useState<Record<string, string[]>> (
     Object.fromEntries(
@@ -67,10 +66,12 @@ const Circuit = ( {config, steps, selectedFunction, onStepChange }:CircuitProps)
     id: `line-${i}`,
     name: `q${i}`,
   }));
+
   const stepsRef = useRef(steps);
   useEffect(() => {
     stepsRef.current = steps;
   }, [steps])
+
   const {
     play: handlePlay,
     pause: handlePause,
@@ -385,14 +386,14 @@ const Circuit = ( {config, steps, selectedFunction, onStepChange }:CircuitProps)
   }, [config])
   //
   useEffect(() => {
-    if (!selectedFunction) return; //  || currentVerifyStep === 0
-    const result = verifyDeutschStep(currentVerifyStep, currentStateRef.current, selectedFunction);
+    if (!verifyStep) return; //  || currentVerifyStep === 0
+    const result = verifyStep(currentVerifyStep, currentStateRef.current);
     console.log("Verification:", result)
      // only update on real steps, skip barriers
     if (result !== null) {
       setVerificationResult(result);
     }
-  }, [currentVerifyStep, selectedFunction]);
+  }, [currentVerifyStep, verifyStep]);
 
   return (
       <div className="flex flex-col h-full w-full gap-2">

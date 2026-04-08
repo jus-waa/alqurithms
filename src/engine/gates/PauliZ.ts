@@ -13,10 +13,10 @@ export function applyPauliZToQubit(state: Qubit, targetQubit: number): Qubit {
     const bit = (i >> targetQubit) & 1;
     if (bit === 0) {
       newState[i] += state[i];
-      console.log('0', bit);
+      //console.log('0', bit);
     } else if (bit === 1) {
       newState[i] += -state[i];
-      console.log('1', bit);
+      //console.log('1', bit);
     }
   }
   return newState;

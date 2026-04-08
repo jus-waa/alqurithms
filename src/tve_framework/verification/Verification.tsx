@@ -1,7 +1,7 @@
 import type { VerificationResult } from "./DeutschVerification"
 interface Props {
   result: VerificationResult | null;
-  currentStep: number;
+  currentStep: number; // do not remove
 }
 
 export default function Verification({ result, currentStep }: Props) {

@@ -1,6 +1,7 @@
 import type { Qubit } from "../../engine/qubit/Qubit";
 
-export type DeutschFunction = "f0" | "f1" | "f2" | "f3";
+import { approx } from "./DeutschVerification";
+import { amp } from "./DeutschVerification";
 
 export type VerificationResult = {
   step: number;
@@ -10,40 +11,32 @@ export type VerificationResult = {
   actual: string;
 };
 
-// for floating point comparison, kase di naman exact. e.g. 0.70710678118 
-// 0.05 so that incase 0.05 yung difference okay lang tatanggapin
-const fpc = 0.05;
-
-export function approx(a: number, b: number) {
-  return Math.abs(a - b) < fpc;
-}
-
-export function amp(state: Qubit, i: number): number {
-  const stateVal = state[i];
-  return (typeof stateVal === "number") ? stateVal : (stateVal as [number, number])[0];
-}
-
+// "" are for barriers
 const labels: Record<string, string> = {
   "default": "Default State",
   "prep": "Initial State",
   "superpos": "Superposition",
-  "oracle": "Oracle",
+  "oracle_1": "Oracle",
+  "oracle_2": "Oracle",
+  "oracle_3": "Oracle",
+  "oracle_4": "Oracle",
   "finalh": "Final Hadamard",
   "meas": "Measurement",
 };
 
-export function verifyDeutschStep(
+export function verifyDeutschJozsaStep(
   step: number,
   state: Qubit,
-  fn: DeutschFunction
 ): VerificationResult | null {
-  
-  const oraclef2 = (fn === "f2") ? 3 : 1;
+
   const prep_step = 1;
   const superpos_step = 2;
-  const oracle_end_step = 3 + oraclef2; // step 6 for f2 step 4 for f0 f1 f3
-  const finalh_step = oracle_end_step + 2; // Step 8 for f2 step 6 for f0 f1 f3
-  const meas_step = oracle_end_step + 3; // step 9 for f2 step 7 for f0 f1 f3
+  const oracle_step_1 = 3;
+  const oracle_step_2 = 4;
+  const oracle_step_3 = 5;
+  const oracle_step_4 = 6;
+  const finalh_step = oracle_step_4 + 2;
+  const meas_step = oracle_step_4 + 3;
 
   let phase = "";
   if (step === 0) {
@@ -52,16 +45,19 @@ export function verifyDeutschStep(
     phase = "prep";
   } else if (step === superpos_step) {
     phase = "superpos";
-  } else if (step === oracle_end_step || (fn === "f2" && (step === 4 || step === 5))) {
-    phase = "oracle";
+  } else if (step === oracle_step_1) {
+    phase = "oracle_1";
+  } else if (step === oracle_step_2) {
+    phase = "oracle_2";
+  } else if (step === oracle_step_3) {
+    phase = "oracle_3";
+  } else if (step === oracle_step_4) {
+    phase = "oracle_4";
   } else if (step === finalh_step) {
     phase = "finalh";
   } else if (step === meas_step) {
     phase = "meas";
-  } else {
-    // barrier gaps step 3 and 7
-    return null;
-  }
+  } else return null;
 
   const label = labels[phase];
   let passed = false;
@@ -74,58 +70,23 @@ export function verifyDeutschStep(
     actual = passed ? "|0⟩|0⟩" : "Not default state";
   } else if (phase === "prep") {
     expected = "|0⟩|1⟩";
-    passed = approx(Math.abs(amp(state, 2)), 1.0); // |01> is decimal index 1
+    passed = approx(Math.abs(amp(state, 8)), 1.0); 
     actual = passed ? "|0⟩|1⟩" : "Incorrect initial state";
   } else if (phase === "superpos") {
     expected = "Equal position on all states";
-    passed = [0, 1, 2, 3].every(i => approx(Math.abs(amp(state, i)), 0.5));
+    passed = 
+      [0, 1, 2, 3, 4, 5, 6 , 7, 8,
+      9, 10, 11, 12, 13, 14, 15, 16].every(i => approx(Math.abs(amp(state, i)), 0.25));
     actual = passed ? "Equal position on all states" : "Not in superposition";
-  } else if (phase === "oracle") {
-    if (fn === "f2" && step === 4) {
-      expected = "|-⟩|−⟩";
-      passed = 
-        approx(amp(state, 0), 0.5) && 
-        approx(amp(state, 1), -0.5) && 
-        approx(amp(state, 2), -0.5) && 
-        approx(amp(state, 3), 0.5);
-      actual = passed ? "|−⟩|−⟩" : "Oracle mismatch";
-    } else if (fn === "f2" && step === 5) {
-      expected = "|-⟩|−⟩";
+  }
+  else if (phase === "oracle_1") {
+      expected = "|+⟩|−⟩";
       passed = 
         approx(amp(state, 0), 0.5) && 
         approx(amp(state, 1), 0.5) && 
         approx(amp(state, 2), -0.5) && 
         approx(amp(state, 3), -0.5);
-      // FIXED label to reflect actual state
-      actual = passed ? "|−⟩|−⟩" : "Oracle mismatch";
-    } else if (step === oracle_end_step) {
-      if (fn === "f0") {
-        expected = "|+⟩|−⟩";
-        passed = 
-          approx(amp(state, 0), 0.5) && 
-          approx(amp(state, 1), 0.5) && 
-          approx(amp(state, 2), -0.5) && 
-          approx(amp(state, 3), -0.5);
-        actual = passed ? "|+⟩|−⟩" : "Oracle mismatch";
-      } else if (fn === "f3") {
-        expected = "|+⟩|−⟩";
-        passed =
-          approx(amp(state, 0), 0.5) &&
-          approx(amp(state, 1), 0.5) &&
-          approx(amp(state, 2), 0.5) &&
-          approx(amp(state, 3), 0.5);
-        actual = passed ? "|+⟩|−⟩ confirmed" : "Oracle mismatch";
-        console.log("Step", step, "State:", state);
-      } else {
-        expected = "|-⟩|−⟩";
-        passed = 
-          approx(amp(state, 0), 0.5) && 
-          approx(amp(state, 1), -0.5) && 
-          approx(amp(state, 2), -0.5) && 
-          approx(amp(state, 3), 0.5);
-        actual = passed ? "|−⟩|−⟩" : "Oracle mismatch";
-      }
-    }
+      actual = passed ? "|+⟩|−⟩" : "Oracle mismatch";
   } else if (phase === "finalh") {
     if (fn === "f0") {
       expected = "State |0⟩";
@@ -133,7 +94,7 @@ export function verifyDeutschStep(
       approx(amp(state, 0), Math.sqrt(0.5)) && 
       approx(amp(state, 2), -Math.sqrt(0.5));
       actual = passed ? "State |0⟩" : "Mismatch";
-    } else if (fn === "f3") {
+    } if (fn === "f3") {
       expected = "State |0⟩";
       passed = 
       approx(amp(state, 0), Math.sqrt(0.5)) && 
@@ -161,7 +122,6 @@ export function verifyDeutschStep(
       actual = passed ? "f(0) ⊕ f(1) = 1" : "Incorrect Measurement";
     }
   }
-
   const logicalStepNum = {
     "default": 0,
     "prep": 1,
