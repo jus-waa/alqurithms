@@ -18,17 +18,18 @@ const Deutsch = () => {
   const resolveRef = useRef<(() => void) | null>(null);
   const initialSteps = useRef([
   [
-    { lineId: "line-0", gateType: "H" },
+    { lineId: "line-0", gateType: "" },
     { lineId: "line-1", gateType: "X" },
   ],
   [
-    { lineId: "line-0", gateType: "" },
+    { lineId: "line-0", gateType: "H" },
     { lineId: "line-1", gateType: "H" },
   ],
   [
     { lineId: "line-0", gateType: "" },
     { lineId: "line-1", gateType: "" },
   ],
+  //oracle
   [
     { lineId: "line-0", gateType: "" },
     { lineId: "line-1", gateType: "" },
@@ -107,14 +108,14 @@ const Deutsch = () => {
     }
 
     setSteps([
-  initialSteps.current[0],
-  initialSteps.current[1],
-  initialSteps.current[2],
-  ...oracleGateStep,
-  initialSteps.current[3],
-  initialSteps.current[4],
-  initialSteps.current[5],
-]);
+      initialSteps.current[0],
+      initialSteps.current[1],
+      initialSteps.current[2],
+      ...oracleGateStep,
+      initialSteps.current[3],
+      initialSteps.current[4],
+      initialSteps.current[5],
+    ]);
 
     if (resolveRef.current) {
       resolveRef.current();

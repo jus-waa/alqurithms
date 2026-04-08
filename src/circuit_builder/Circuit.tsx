@@ -57,7 +57,7 @@ const Circuit = ( {config, steps, selectedFunction, onStepChange }:CircuitProps)
   const [showModal, setShowModal] = useState(false);  
 
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
-  const [currentVerifyStep, setCurrentVerifyStep] = useState(1);
+  const [currentVerifyStep, setCurrentVerifyStep] = useState(0);
   const currentStateRef = useRef<Qubit>(config.initialState);
 
   const measurementResultsRef = useRef<Record<string, Qubit>>({});  const circuitContainerRef = useRef<HTMLDivElement>(null)
@@ -385,7 +385,7 @@ const Circuit = ( {config, steps, selectedFunction, onStepChange }:CircuitProps)
   }, [config])
   //
   useEffect(() => {
-    if (!selectedFunction || currentVerifyStep === 0) return;
+    if (!selectedFunction) return; //  || currentVerifyStep === 0
     const result = verifyDeutschStep(currentVerifyStep, currentStateRef.current, selectedFunction);
     console.log("Verification:", result)
      // only update on real steps, skip barriers

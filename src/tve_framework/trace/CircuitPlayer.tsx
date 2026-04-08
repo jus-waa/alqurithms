@@ -320,6 +320,9 @@ const useCircuitPlayer = (
 
     stepIndexRef.current += 1;
     buildSlots(stepIndexRef.current);
+    if (onStepChange) {
+      onStepChange(stepIndexRef.current);
+    }
   }
 
   function stepBack() {
@@ -328,12 +331,18 @@ const useCircuitPlayer = (
 
     stepIndexRef.current -= 1;
     buildSlots(stepIndexRef.current);
+    if (onStepChange) {
+      onStepChange(stepIndexRef.current);
+    }
   }
 
   function reset() {
     pause();
     stepIndexRef.current = 0;
     buildSlots(0);
+    if (onStepChange) {
+      onStepChange(0);
+    }
   }
 
   return {

@@ -24,45 +24,13 @@ function amp(state: Qubit, i: number): number {
 }
 
 // "" are for barriers
-const labels: Record<number, string> = {
-  1: "Initial State",
-  2: "Superposition",
-  4: "Oracle",
-  6: "Final Hadamard",
-  7: "Measurement",
-};
-
-const expectedState: Record<number, Record<DeutschFunction, string>> = {
-  1: { 
-    f0: "|0⟩|1⟩", 
-    f1: "|0⟩|1⟩", 
-    f2: "|0⟩|1⟩", 
-    f3: "|0⟩|1⟩" 
-  },
-  2: { 
-    f0: "(|0⟩ + |1⟩)/√2 ⊗ |−⟩", 
-    f1: "(|0⟩ + |1⟩)/√2 ⊗ |−⟩", 
-    f2: "(|0⟩ + |1⟩)/√2 ⊗ |−⟩", 
-    f3: "(|0⟩ + |1⟩)/√2 ⊗ |−⟩" 
-  },
-  4: {
-    f0: "|+⟩|−⟩", // two identity
-    f1: "|−⟩|−⟩", // cnot
-    f2: "|−⟩|−⟩", // z i, cnot, z i
-    f3: "|+⟩|−⟩", // i z
-  },  
-  6: {
-    f0: "|0⟩ on q0",
-    f1: "|1⟩ on q0",
-    f2: "|1⟩ on q0",
-    f3: "|0⟩ on q0",
-  },
-  7: {
-    f0: "Measure 0, results to constant",
-    f1: "Measure 1, results to balanced",
-    f2: "Measure 1, results to balanced",
-    f3: "Measure 0, results to balanced",
-  },
+const labels: Record<string, string> = {
+  "default": "Default State",
+  "prep": "Initial State",
+  "superpos": "Superposition",
+  "oracle": "Oracle",
+  "finalh": "Final Hadamard",
+  "meas": "Measurement",
 };
 
 export function verifyDeutschStep(
@@ -70,81 +38,119 @@ export function verifyDeutschStep(
   state: Qubit,
   fn: DeutschFunction
 ): VerificationResult | null {
-  const label = (step === 1) ? "Initial State" : labels[step] ?? `Step ${step}`;
-  const expected = (step === 1) ? "|0⟩|1⟩" : expectedState[step]?.[fn] ?? "—";
+  // diff oracle length for f2 kase zi>cnot>zi
+  const oraclef2 = (fn === "f2") ? 3 : 1;
+
+  const prep_step = 1;
+  const superpos_step = 2;
+  const oracle_step = 3 + oraclef2;
+  const finalh_step = oracle_step + 2;
+  const meas_step = oracle_step + 3;
+
+  let phase = "";
+  if (step === 0) {
+    phase = "default";
+  } else if (step === prep_step) {
+    phase = "prep";
+  } else if (step === superpos_step) {
+    phase = "superpos";
+  } else if (step === oracle_step) {
+    phase = "oracle";
+  } else if (step === finalh_step) {
+    phase = "finalh";
+  } else if (step === meas_step) {
+    phase = "meas";
+  } else return null;
+
+  const label = labels[phase];
   let passed = false;
   let actual = "";
+  let expected = "";
   
-  // step 3,5 includes barrier kaya auto true nlng passed at actual === prev actual
-  if (step === 3 || step === 5) return null;
-
-  if (step === 1) {
+  if (phase === "default") {
+    expected = "|0⟩|0⟩";
     passed = approx(Math.abs(amp(state, 0)), 1.0);
-    actual = passed ? "|0⟩|1⟩ confirmed" : "Unexpected initial state";
-  } 
-  else if (step === 2) {
-    // All 4 must be in super pos
-    const allSuper = [0, 1, 2, 3].every(i => approx(Math.abs(amp(state, i)), 0.5));
-    passed = allSuper;
-    actual = passed ? "Equal superposition confirmed" : "Not in superposition";
-  } 
-  else if (step === 4) {
-    if (fn === "f0" || fn === "f3") {
-      // |+⟩|−⟩: [0.5, -0.5, 0.5, -0.5]
+    actual = passed ? "|0⟩|0⟩" : "Not default state";
+  } else if (phase === "prep") {
+    expected = "|0⟩|1⟩";
+    passed = approx(Math.abs(amp(state, 2)), 1.0); // |01> is decimal index 1
+    actual = passed ? "|0⟩|1⟩" : "Incorrect initial state";
+  } else if (phase === "superpos") {
+    expected = "(|0⟩ + |1⟩)/√2 ⊗ |−⟩";
+    passed = [0, 1, 2, 3].every(i => approx(Math.abs(amp(state, i)), 0.5));
+    actual = passed ? "(|0⟩ + |1⟩)/√2 ⊗ |−⟩" : "Not in superposition";
+  }
+  else if (phase === "oracle") {
+    if (fn === "f0") {
+      expected = "|+⟩|−⟩";
+      passed = 
+        approx(amp(state, 0), 0.5) && 
+        approx(amp(state, 1), 0.5) && 
+        approx(amp(state, 2), -0.5) && 
+        approx(amp(state, 3), -0.5);
+      actual = passed ? "|+⟩|−⟩" : "Oracle mismatch";
+    } else if (fn === "f3") {
+      // |+⟩|−⟩: [0.5, 0.5, 0.5, 0.5]
+      expected = "|+⟩|−⟩";
       passed =
         approx(amp(state, 0), 0.5) &&
         approx(amp(state, 1), 0.5) &&
-        approx(amp(state, 2), -0.5) &&
-        approx(amp(state, 3), -0.5);
+        approx(amp(state, 2), 0.5) &&
+        approx(amp(state, 3), 0.5);
       actual = passed ? "|+⟩|−⟩ confirmed" : "Oracle output mismatch";
       console.log("Step", step, "State:", state);
     } else {
-      // |−⟩|−⟩: [-0.5, 0.5, -0.5, 0.5] or similar sign variants
-      passed =
-        approx(amp(state, 0), 0.5) &&
-        approx(amp(state, 1), -0.5) &&
-        approx(amp(state, 2), -0.5) &&
+      expected = "|-⟩|−⟩";
+      passed = 
+        approx(amp(state, 0), 0.5) && 
+        approx(amp(state, 1), -0.5) && 
+        approx(amp(state, 2), -0.5) && 
         approx(amp(state, 3), 0.5);
-      actual = passed ? "|−⟩|−⟩ confirmed" : "Oracle output mismatch";
-      console.log("Step", step, "State:", state);
+      actual = passed ? "|−⟩|−⟩" : "Oracle mismatch";
     }
-  } 
-  else if (step === 6) {
-    if (fn === "f0" || fn === "f3") {
-      passed =
-        approx(amp(state, 0), Math.sqrt(0.5)) && //0.7071
-        approx(amp(state, 1), 0) &&
-        approx(amp(state, 2), -Math.sqrt(0.5)) &&
-        approx(amp(state, 3), 0);
-      actual = passed ? "|+⟩ state on q0" : "|-⟩ state on q0 — mismatch";
-      console.log("Step", step, "State:", state);
+  } else if (phase === "finalh") {
+    if (fn === "f0") {
+      expected = "State |0⟩";
+      passed = 
+      approx(amp(state, 0), Math.sqrt(0.5)) && 
+      approx(amp(state, 2), -Math.sqrt(0.5));
+      actual = passed ? "State |0⟩" : "Mismatch";
+    } if (fn === "f3") {
+      expected = "State |0⟩";
+      passed = 
+      approx(amp(state, 0), Math.sqrt(0.5)) && 
+      approx(amp(state, 2), Math.sqrt(0.5));
+      actual = passed ? "State |0⟩" : "Mismatch";
     } else {
-      passed =
-        approx(amp(state, 0), 0) &&
+      expected = "State |1⟩";
+      passed = 
         approx(amp(state, 1), Math.sqrt(0.5)) &&
-        approx(amp(state, 2), 0) &&
         approx(amp(state, 3), -Math.sqrt(0.5));
-      actual = passed ? "|-⟩ state on q0" : "|+⟩ state on q0 — mismatch";
-      console.log("Step", step, "State:", state, "Actual:", actual);
+      actual = passed ? "State |1⟩" : "Mismatch";
     }
-  } 
-  else if (step === 7) {
+  } else if (phase === "meas") {
     let max = 0;
     for (let i = 0; i < state.length; i++) {
-      if (Math.abs(state[i]) > Math.abs(state[max])) {
-        max = i;
-      } 
+      if (Math.abs(state[i]) > Math.abs(state[max])) max = i;
     }
     if (fn === "f0" || fn === "f3") { 
+      expected = "f(0) ⊕ f(1) = 0 (Constant)";
       passed = max === 0 || max === 2;
-      actual = passed ? "Measured 0 and is CONSTANT" : "Measured 1 — wrong";
-      console.log("Step", step, "State:", state);
+      actual = passed ? "f(0) ⊕ f(1) = 0" : "Incorrect Measurement";
     } else {
+      expected = "f(0) ⊕ f(1) = 1 (Balanced)";
       passed = max === 1 || max === 3;
-      actual = passed ? "Measured 1 and is BALANCED" : "Measured 0 — wrong";
-      console.log("Step", step, "State:", state);
+      actual = passed ? "f(0) ⊕ f(1) = 1" : "Incorrect Measurement";
     }
   }
+  const logicalStepNum = {
+    "default": 0,
+    "prep": 1,
+    "superpos": 2,
+    "oracle": 3,
+    "finalh": 4,
+    "meas": 5
+  }[phase] ?? -1;
 
-  return { step, label, passed, expected, actual };
+  return { step: logicalStepNum, label, passed, expected, actual };
 }
