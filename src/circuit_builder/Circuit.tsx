@@ -14,13 +14,14 @@ import { applyToffoliToQubit } from "../engine/gates/Toffoli";
 import { applyPauliIToQubit } from "../engine/gates/PauliI";
 import { applyPauliZToQubit } from "../engine/gates/PauliZ";
 import { applyBarrierToQubit } from "../engine/gates/Barrier";
-import { measureQubit } from "../engine/gates/Measurement";
+import { measureQubit } from "../engine/gates/Measurement.ts";
 import useCircuitPlayer from "../tve_framework/trace/CircuitPlayer";
 import type { CircuitConfig } from "../engine/types/CircuitConfig";
 import type { Qubit } from "../engine/qubit/Qubit";
 import VerticalLines from "../tve_framework/trace/VerticalLines";
 import type { VerificationResult } from "../tve_framework/verification/DeutschVerification.ts";
 import Verification from "../tve_framework/verification/Verification";
+
 type GateStep = {
   lineId: string;
   gateType: string;
@@ -307,10 +308,16 @@ const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
   function executeCircuit() {
     //console.log("slots:", JSON.stringify(slots));
     //console.log("multiSlots:", JSON.stringify(multiSlots));
-    console.log("=== Initial State ===");
-    config.initialState.forEach((amp, i) => {
-      console.log(`|${i.toString(2).padStart(config.qubitCount, '0')}⟩ : ${amp.toFixed(5)}`);
-    });
+    // console.log("=== Initial State ===");
+    // config.initialState.forEach((amp, i) => {
+    //   console.log(`|${i.toString(2).padStart(config.qubitCount, '0')}⟩ : ${amp.toFixed(5)}`);
+    // });
+    const initNonZero = config.initialState
+      .map((amp, i) => ({ i, amp }))
+      .filter(({ amp }) => Math.abs(amp) > 0.0001)
+      .map(({ i, amp }) => `|${i.toString(2).padStart(config.qubitCount, '0')}⟩:${amp.toFixed(3)}`)
+      .join("  ");
+    console.log(`=== Initial State === ${initNonZero}`);
     let currentState: Qubit = [...config.initialState];
     const maxGates = Math.max(...Object.values(slots).map(gates => gates.length), 0);
 
@@ -353,24 +360,59 @@ const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
               metadata.target
             );
           }
-          // not sure kung okay lang to
         } else if (gateType === "M") {
           if (!measuredBits.includes(lineIndex)) {
             measuredBits.push(lineIndex);
           }
         }
-        console.log(`Step ${col}, Gate: ${gateType} on line ${lineIndex}`);
-        colState.forEach((amp, i) => {
-          console.log(`|${i.toString(2).padStart(config.qubitCount, '0')}⟩ : ${amp.toFixed(5)}`);
-        });
+        // console.log(`Step ${col}, Gate: ${gateType} on line ${lineIndex}`);
+        // colState.forEach((amp, i) => {
+        //   console.log(`|${i.toString(2).padStart(config.qubitCount, '0')}⟩ : ${amp.toFixed(5)}`);
+        // });
       });
       currentState = colState;
+      const nonZero = currentState
+        .map((amp, i) => ({ i, amp }))
+        .filter(({ amp }) => Math.abs(amp) > 0.0001)
+        .map(({ i, amp }) => `|${i.toString(2).padStart(config.qubitCount, '0')}⟩:${amp.toFixed(3)}`)
+        .join("  ");
+      console.log(`Step ${col}: ${nonZero || "(all zero)"}`);
     }
-    // not sure kung okay lang to
     currentStateRef.current = currentState;
     if (measuredBits.length > 0) {
-      setState(measureQubit(currentState, measuredBits, config.qubitCount));
+      const measuredState = measureQubit(currentState, measuredBits, config.qubitCount);
+      currentStateRef.current = measuredState;
+
+      console.group(`%c⟨ψ| Statevector — ${config.qubitCount} qubits`, 'color: #6929c4; font-weight: bold; font-size: 13px');
+      currentStateRef.current.forEach((amp, i) => {
+        const label = `|${i.toString(2).padStart(config.qubitCount, '0')}⟩`;
+        const prob = (amp * amp * 100).toFixed(2);
+        const bar = '█'.repeat(Math.round(amp * amp * 20));
+        if (Math.abs(amp) > 0.0001) {
+          console.log(`%c${label}  %camp: ${amp.toFixed(5)}  %cprob: ${prob}%  ${bar}`,
+            'color: #78a9ff; font-family: monospace',
+            'color: #a8a8a8',
+            'color: #42be65'
+          );
+        }
+      });
+      console.groupEnd();
+      setState(measuredState);
     } else {
+      console.group(`%c⟨ψ| Statevector — ${config.qubitCount} qubits`, 'color: #6929c4; font-weight: bold; font-size: 13px');
+      currentStateRef.current.forEach((amp, i) => {
+        const label = `|${i.toString(2).padStart(config.qubitCount, '0')}⟩`;
+        const prob = (amp * amp * 100).toFixed(2);
+        const bar = '█'.repeat(Math.round(amp * amp * 20));
+        if (Math.abs(amp) > 0.0001) {
+          console.log(`%c${label}  %camp: ${amp.toFixed(5)}  %cprob: ${prob}%  ${bar}`,
+            'color: #78a9ff; font-family: monospace',
+            'color: #a8a8a8',
+            'color: #42be65'
+          );
+        }
+      });
+      console.groupEnd();
       setState(currentState);
     }
   }

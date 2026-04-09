@@ -5,12 +5,12 @@ interface Props {
 }
 
 export default function Verification({ result, currentStep }: Props) {
-  const displayStep: Record<number, string> = {
-    0: "State |0⟩",
-    1: "State |1⟩",
-    3: "State |2⟩",
-    4: "State |3⟩",
-    5: "Output",
+  const displayStep: Record<number, number> = {
+    0: 0,
+    1: 1,
+    3: 3,
+    4: 4,
+    5: 5,
   };
   if (!result) {
     return (

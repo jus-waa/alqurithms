@@ -2,6 +2,7 @@ import Layout from '../components/Layout'
 import Circuit from '../circuit_builder/Circuit'
 import { zeroState } from '../engine/qubit/Qubit';
 import type { CircuitConfig } from '../engine/types/CircuitConfig';
+import { verifyDeutschJozsaStep } from '../tve_framework/verification/DeutschJozsaVerification';
 
 const deutschJozsaConfig: CircuitConfig = {
   algoName: "Deutsch-Jozsa", 
@@ -134,7 +135,10 @@ const DeutschJozsa = () => {
   return (
     <Layout>
       <div className='h-full w-full'>
-        <Circuit config={deutschJozsaConfig} steps={steps}/>
+        <Circuit 
+        config={deutschJozsaConfig} 
+        steps={steps}
+        verifyStep={(step, state) => verifyDeutschJozsaStep(step, state)}/>
       </div>
     </Layout>
   )
