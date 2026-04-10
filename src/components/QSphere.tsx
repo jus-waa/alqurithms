@@ -54,7 +54,8 @@ const QSphere = ({ state, qubitCount } : {
 	*/}
   return (
     <>
-      <div className="border border-black/20 rounded-lg place-content-center bg-white h-full">
+      <div className="flex flex-col border border-black/20 rounded-lg place-content-center bg-white h-full">
+        <h3 className='gap-4 p-4'>Q Sphere</h3>
         <Canvas frameloop="demand">
           {/* Lights */}
           <ambientLight />

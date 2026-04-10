@@ -444,14 +444,30 @@ const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
           <div className="w-full">
             <Probabilities state={state}/>
           </div>
+          {/* Q SPhere */}
           <div className="w-full">
             <QSphere state = {state} qubitCount = {config.qubitCount} />
           </div>
-          {/* Temporary to fillup space (Explanation Box) */}
+          {/* Explanation Box */}
           <div className="w-full">
             <div className="flex flex-col gap-2 p-4 border border-black/20 rounded-lg bg-white h-full">
-              <h3 className="pl-2">Verification</h3>
-              <Verification result={verificationResult} currentStep={currentVerifyStep} />
+              <div className="flex flex-col gap-3 p-4 border border-black/20 h-full rounded-sm">
+                <h3>Explanation</h3>
+                <div className="flex flex-1 items-start">
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    <span className="text-gray-400 italic">
+                      Press play or step forward to begin.
+                    </span>
+                  </p>
+                </div>
+                <div className="text-xs text-gray-400 text-right">
+                  Step
+                </div>
+              </div>
+              <div>
+                <h3 className="pl-2">Verification</h3>
+                <Verification result={verificationResult} currentStep={currentVerifyStep} />
+              </div>
             </div>
           </div>
         </div>
@@ -461,12 +477,13 @@ const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
             {/* Gates */}
             <div className="flex flex-col gap-4 p-4 border border-black/20 rounded-lg  bg-white w-full h-full">
               <h3 className="pl-2 h-8">Gates</h3>
-              {/* List of gates 
-              e.g. <Gate id="H" name="H"/> */}
-              <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
-                {config.allowedGates.map(g => (
-                  <Gate key={g} id={g} name={g}/>
-                ))}
+              {/* List of gates */}
+              <div className="grid grid-cols-6 grid-rows-8 border border-black/20 rounded-sm p-2 gap-2 h-full">
+                {config.allowedGates.map(g => {
+                  let displayName = g;
+                  if (g === "CNOT") displayName = "⊕";
+                  return <Gate key={g} id={g} name={displayName}/>
+                })}
               </div>
             </div>
             {/* Quantum Circuit */}

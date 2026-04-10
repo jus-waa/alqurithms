@@ -30,9 +30,7 @@ const Probabilities = ({ state }: ProbabilitiesProps) => {
     datasets: [{
       label: 'Probability',
       data: entries.map(e => parseFloat((e.prob * 100).toFixed(2))),
-      backgroundColor: 'rgba(105, 41, 196, 0.85)',
-      borderColor: 'rgba(159, 24, 83, 1)',
-      borderWidth: 1,
+      backgroundColor: 'rgba(0, 119, 182, 1)',
       borderRadius: 2,
     }],
   }
