@@ -3,6 +3,8 @@ import Circuit from '../circuit_builder/Circuit'
 import { zeroState } from '../engine/qubit/Qubit';
 import type { CircuitConfig } from '../engine/types/CircuitConfig';
 import { verifyBernsteinVaziraniStep } from '../tve_framework/verification/BernsteinVaziraniVerification';
+import { explainBernsteinVaziraniStep } from '../tve_framework/explanation/BernsteinVaziraniExplanation';
+import { openQASMBernsteinVaziraniStep } from '../tve_framework/explanation/openQASM/BernsteinVaziraniOpenQASM';
 
 const bernsteinVaziraniConfig: CircuitConfig = {
   algoName: "Bernstein-Vazirani", 
@@ -65,6 +67,13 @@ const steps = [
     { lineId: "line-4", gateType: "CNOT", meta: { control: 3, target: 4 }},
   ],
   [
+    { lineId: "line-0", gateType: "" },
+    { lineId: "line-1", gateType: "" },
+    { lineId: "line-2", gateType: "" },
+    { lineId: "line-3", gateType: "" },
+    { lineId: "line-4", gateType: "" },
+  ],
+  [
     { lineId: "line-0", gateType: "H" },
     { lineId: "line-1", gateType: "H" },
     { lineId: "line-2", gateType: "H" },
@@ -92,7 +101,9 @@ const BernsteinVazirani = () => {
         <Circuit 
           config={bernsteinVaziraniConfig} 
           steps={steps}
-          verifyStep={(step, state) => verifyBernsteinVaziraniStep(step, state, secret)}/>
+          verifyStep={(step, state) => verifyBernsteinVaziraniStep(step, state, secret)}
+          explainStep={(step) => explainBernsteinVaziraniStep(step)}
+          openQASMStep={(step) => openQASMBernsteinVaziraniStep(step)}/>
       </div>
     </Layout>
   )

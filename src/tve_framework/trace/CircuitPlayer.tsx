@@ -125,86 +125,6 @@ const useCircuitPlayer = (
       elapsed += 50;
     }
   }
-  
-  // copy for: exisitng gate + new gates
-  // function addGate (gate: GateStep, stepIndex: number) {
-  //   if (gate.gateType === "CNOT" && gate.meta) {
-  //     if (gate.meta.control !== parseInt(gate.lineId.split("-")[1])) {
-  //       return;
-  //     }
-  //     const cnotId = `CNOT-${stepIndex}`;
-  //     const controlId = `line-${gate.meta.control}`;
-  //     const targetId = `line-${gate.meta.target}`;
-
-  //     setMultiSlots(prev => ({
-  //       ...prev,
-  //       [cnotId]: { 
-  //         control: gate.meta!.control, 
-  //         target: gate.meta!.target 
-  //       }
-  //     }));
-  //     // space filler 
-  //     const min = Math.min(gate.meta.control, gate.meta.target);
-  //     const max = Math.max(gate.meta.control, gate.meta.target);   
-           
-  //     setSlots(prev => {
-  //       const updated = { ...prev };
-  //       updated[controlId] = [...updated[controlId], cnotId];
-  //       updated[targetId] = [...updated[targetId], cnotId];
-
-  //       for (let i = min + 1; i < max; i++){
-  //         updated[`line-${i}`] = [...updated[`line-${i}`], `SPACE-${cnotId}-${i}`];
-  //       } 
-  //       return updated;
-  //     });
-
-  //   } else if (gate.gateType === "T" && gate.meta) {
-  //     if (gate.meta.control !== parseInt(gate.lineId.split("-")[1])) {
-  //       return;
-  //     }
-  //     const toffoliId = `T-${stepIndex}`;
-  //     const controlId = `line-${gate.meta.control}`;
-  //     const control2Id = `line-${gate.meta.control2}`;
-  //     const control3Id = `line-${gate.meta.control3}`;
-  //     const targetId = `line-${gate.meta.target}`;
-
-  //     setMultiSlots(prev => ({
-  //       ...prev,
-  //       [toffoliId]: { 
-  //         control: gate.meta!.control,
-  //         control2: gate.meta!.control2,
-  //         control3: gate.meta!.control3,
-  //         target: gate.meta!.target
-  //       }
-  //     }));
-
-  //     setSlots(prev => ({
-  //       ...prev,
-  //       [controlId]: [...prev[controlId], toffoliId],
-  //       [control2Id]: [...prev[control2Id], toffoliId],
-  //       [control3Id]: [...prev[control3Id], toffoliId],
-  //       [targetId]: [...prev[targetId], toffoliId],
-  //     }));
-  //   } else if (gate.gateType === "M") {
-  //     const lineIndex = parseInt(gate.lineId.split("-")[1]);
-  //     const measurementId = `M-${stepIndex}`; 
-  //     setMultiSlots(prev => ({ ...prev, [measurementId]: { control: lineIndex, target: lineIndex }}));
-  //     setSlots(prev => {
-  //       const updated = { ...prev };
-  //       updated[gate.lineId] = [...updated[gate.lineId], measurementId];
-  //       for (let i = lineIndex + 1; i < qubitCount; i++) {
-  //         updated[`line-${i}`] = [...updated[`line-${i}`], `SPACE-${measurementId}-${i}`];
-  //       }
-  //       return updated;
-  //     });
-  //   } else {
-  //     setSlots(prev => {
-  //       const copy = {...prev};
-  //       copy[gate.lineId] = [...copy[gate.lineId], `${gate.gateType}-${stepIndex}`];
-  //       return copy;
-  //     });
-  //   }
-  // }
 
   async function play() {
     if (isPlayingRef.current) {
@@ -217,7 +137,7 @@ const useCircuitPlayer = (
     isPausedRef.current = false;
     setIsPlaying(true);
 
-    const stepDelay = 1000;
+    const stepDelay = 3000;
 
     while (stepIndexRef.current < stepsRef.current.length) {
       if (isPausedRef.current) {

@@ -56,7 +56,7 @@ export function verifyDeutschJozsaStep(
     phase = "oracle_2";
   } else if (step >= oracle_step_3 && step < oracle_step_3_end) {
     phase = "oracle_3";
-  } else if (step >= oracle_step_4 && step < oracle_step_4_end) {
+  } else if (step >= oracle_step_4 && step <= oracle_step_4_end) {
     phase = "oracle_4";
   } else if (step === finalh_step) {
     phase = "finalh";
@@ -193,7 +193,7 @@ export function verifyDeutschJozsaStep(
       actual = passed ? "|+⟩|−⟩" : "Oracle mismatch";
     } else if (step === 17) {
       expected = "|+⟩|−⟩";
-      const negativeIndices = [0, 2, 7, 9, 11, 12, 13, 14];
+      const negativeIndices = [3, 4, 6, 7, 8, 9, 10, 13];
       passed = Array.from({length: 16}).every((_, i) => {
         if (negativeIndices.includes(i)) {
           return approx(amp(state, i), -0.25);
@@ -202,18 +202,7 @@ export function verifyDeutschJozsaStep(
         }
       });      
       actual = passed ? "|+⟩|−⟩" : "Oracle mismatch";
-    } else if (step === 18) {
-      expected = "|+⟩|−⟩";
-      const negativeIndices = [3, 4, 6, 8, 9, 10, 13, 15];
-      passed = Array.from({length: 16}).every((_, i) => {
-        if (negativeIndices.includes(i)) {
-          return approx(amp(state, i), -0.25);
-        } else {
-          return approx(amp(state, i), 0.25);
-        }
-      });      
-      actual = passed ? "|+⟩|−⟩" : "Oracle mismatch";
-    }
+    } 
   } else if (phase === "finalh") {
     expected = "Final Hadamard";
     const zeroIndices = [0, 1, 6, 7, 8, 9, 14, 15];
