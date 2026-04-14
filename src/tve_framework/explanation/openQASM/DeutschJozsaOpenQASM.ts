@@ -3,7 +3,7 @@ export type OpenQASMResult = {
   openQASM: string;
 };
 
-const initial = "OPENQASM 3;\n\nqubit[4] q;\nbit[4] c;\n";
+const initial = "OPENQASM 3;\n\nqubit[4] q;\nbit[3] c;\n";
 const prep = initial + "\nx q[3];";
 const superpos = prep + "\nh q[0];\nh q[1];\nh q[2];\nh q[3];";
 

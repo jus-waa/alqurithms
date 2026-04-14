@@ -6,7 +6,7 @@ export type OpenQASMResult = {
 };
 
 const phaseLabels: Record<string, string> = {
-  default: "OPENQASM 3;\n\nqubit[2] q;\nbit[2] c;\n",
+  default: "OPENQASM 3;\n\nqubit[2] q;\nbit[1] c;\n",
   prep: "OPENQASM 3;\n\nqubit[2] q;\nbit[2] c;\n\nx q[1];",
   superpos: "OPENQASM 3;\n\nqubit[2] q;\nbit[2] c;\n\nx q[1];\nh q[0];\nh q[1];\n"
 };

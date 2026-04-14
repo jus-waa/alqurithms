@@ -6,30 +6,30 @@ export type ExplanationResult = {
 };
 
 const phaseLabels: Record<string, string> = {
-  default: "Initially, the states are prepared |0⟩ and |1⟩, representing the first qubit (q0) and second qubit (q1). Barrier gates will be applied throughout the algorithm to separate pieces of the circuit properly.",
-  prep: "A Pauli-X gate is applied on the second qubit to flip the ancilla from |0⟩ to |1⟩ before creating the |−⟩ state.",
-  superpos: "Hadamard gates are applied on both qubits, creating a superposition and allowing the algorithm to evaluate all possible inputs simultaneously — this is quantum parallelism. Each of the states will now have equal value.",
+  default: "Initially, states are |0⟩|0⟩. Barrier gates will be applied throughout the algorithm to separate pieces of the circuit properly.",
+  prep: "Then, the initial states are prepared |0⟩ and |1⟩ by applying Pauli-X gate on the last qubit to flip the ancilla from |0⟩ to |1⟩. ",
+  superpos: "Hadamard gates are applied on both qubits, creating a superposition and allowing the algorithm to evaluate all possible inputs simultaneously enabling quantum parallelism. Each of the states will now have equal value.",
 };
 
 const oracleExplanations: Record<DeutschFunction, string> = {
-  f0: "The oracle Uf encodes f0 by applying Identity gates on both qubits, leaving the states unchanged. No entanglement is created.",
-  f1: "The oracle Uf encodes f1 by applying a CNOT gate, which creates entanglement between the qubits, correlating their states in a way that is crucial for distinguishing balanced functions from constant ones. The control is the first qubit and the target is the second qubit.",
-  f2: "The oracle Uf encodes f2 by applying a Z gate on the first qubit and Identity gate on the second qubit, followed by a CNOT gate, then another Z gate on the first qubit and Identity gate on the second qubit. The Z gates flip the phase of the qubit without creating entanglement, while the CNOT gate generates entanglement between the qubits.",
-  f3: "The oracle Uf encodes f3 by applying an Identity gate on the first qubit and a Z gate on the second qubit. The first qubit is left unchanged, no entanglement occurs, and the qubits remain separable.",
+  f0: "The oracle Uf implements f0 by applying Identity gates on both qubits, leaving the states unchanged.",
+  f1: "The oracle Uf implements f1 by applying a CNOT gate, which creates entanglement between the qubits, correlating their states in a way that is crucial for distinguishing balanced functions from constant ones. The control is the first qubit and the target is the second qubit.",
+  f2: "The oracle Uf implements f2 by applying a Z gate on the first qubit and Identity gate on the second qubit, followed by a CNOT gate, then another Z gate on the first qubit and Identity gate on the second qubit. The Z gates flip the phase of the qubit without creating entanglement, while the CNOT gate generates entanglement between the qubits.",
+  f3: "The oracle Uf implements f3 by applying an Identity gate on the first qubit and a Z gate on the second qubit. The first qubit is left unchanged, no entanglement occurs, and the qubits remain separable.",
 };
 
 const finalHExplanations: Record<DeutschFunction, string> = {
-  f0: "A Hadamard gate is applied again to the first qubit to extract the result. The Hadamard on the second qubit is optional and retained only for circuit symmetry and analytical clarity — Identity can be used as an alternative.",
-  f1: "A Hadamard gate is applied again to the first qubit to extract the result. The Hadamard on the second qubit is optional and retained only for circuit symmetry and analytical clarity — Identity can be used as an alternative.",
-  f2: "A Hadamard gate is applied again to the first qubit to extract the result. The Hadamard on the second qubit is optional and retained only for circuit symmetry and analytical clarity — Identity can be used as an alternative.",
-  f3: "A Hadamard gate is applied again to the first qubit to extract the result. The Hadamard on the second qubit is optional and retained only for circuit symmetry and analytical clarity — Identity can be used as an alternative.",
+  f0: "A Hadamard gate will be applied again to the first qubit to extract the result, while the Identity or Hadamard gate on the second qubit is optional and retained only for circuit symmetry and analytical clarity.",
+  f1: "A Hadamard gate will be applied again to the first qubit to extract the result, while the Identity or Hadamard gate on the second qubit is optional and retained only for circuit symmetry and analytical clarity.",
+  f2: "A Hadamard gate will be applied again to the first qubit to extract the result, while the Identity or Hadamard gate on the second qubit is optional and retained only for circuit symmetry and analytical clarity.",
+  f3: "A Hadamard gate will be applied again to the first qubit to extract the result, while the Identity or Hadamard gate on the second qubit is optional and retained only for circuit symmetry and analytical clarity.",
 };
 
 const measurementExplanations: Record<DeutschFunction, string> = {
-  f0: "Measuring the first qubit yields |0⟩ — f0 is Constant. The application of Identity gates left the states unchanged, so the function produces the same output for all inputs.",
-  f1: "Measuring the first qubit yields |1⟩ — f1 is Balanced. The CNOT gate created entanglement between the qubits, producing different outputs for different inputs.",
-  f2: "Measuring the first qubit yields |1⟩ — f2 is Balanced. The phase flips from the Z gates combined with the entanglement from the CNOT gate produce different outputs for different inputs.",
-  f3: "Measuring the first qubit yields |0⟩ — f3 is Constant. The Z gate on the second qubit affects the phase but does not create entanglement, so the function produces the same output for all inputs.",
+  f0: "Measuring the first qubit yields |0⟩ — f0 is Constant. The application of Identity gates left the states unchanged.",
+  f1: "Measuring the first qubit yields |1⟩ — f1 is Balanced. The CNOT gate created entanglement between the qubits.",
+  f2: "Measuring the first qubit yields |1⟩ — f2 is Balanced. The phase flips from the Pauli-Z gates and CNOT gate creating entanglement",
+  f3: "Measuring the first qubit yields |0⟩ — f3 is Constant. The Pauli-Z gate on the second qubit affects the phase but does not create entanglement.",
 };
 
 export function explainDeutschStep( step: number, fn: DeutschFunction ): ExplanationResult | null {

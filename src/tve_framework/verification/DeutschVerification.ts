@@ -24,8 +24,8 @@ export function amp(state: Qubit, i: number): number {
 }
 
 const labels: Record<string, string> = {
-  "default": "Default State",
-  "prep": "Initial State",
+  "default": "Initial State",
+  "prep": "Preparation",
   "superpos": "Superposition",
   "oracle": "Oracle",
   "finalh": "Final Hadamard",
@@ -128,19 +128,19 @@ export function verifyDeutschStep(
     }
   } else if (phase === "finalh") {
     if (fn === "f0") {
-      expected = "State |0⟩";
+      expected = "First qubit - State |0⟩";
       passed = 
       approx(amp(state, 0), Math.sqrt(0.5)) && 
       approx(amp(state, 2), -Math.sqrt(0.5));
       actual = passed ? "State |0⟩" : "Mismatch";
     } else if (fn === "f3") {
-      expected = "State |0⟩";
+      expected = "First qubit - State |0⟩";
       passed = 
       approx(amp(state, 0), Math.sqrt(0.5)) && 
       approx(amp(state, 2), Math.sqrt(0.5));
       actual = passed ? "State |0⟩" : "Mismatch";
     } else {
-      expected = "State |1⟩";
+      expected = "First qubit - State |1⟩";
       passed = 
         approx(amp(state, 1), Math.sqrt(0.5)) &&
         approx(amp(state, 3), -Math.sqrt(0.5));

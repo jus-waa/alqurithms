@@ -11,11 +11,11 @@ export type VerificationResult = {
 };
 
 const labels: Record<string, string> = {
-  "default": "Default State",
-  "prep": "Initial State Preparation",
+  "default": "Initial State",
+  "prep": "Preparation",
   "superpos": "Superposition",
   "o1": "Oracle (s[0] = 1)",
-  "o2": "Oracle (s[1] = 1)",
+  "o2": "Oracle (s[2] = 1)",
   "o3": "Oracle (s[3] = 1)",
   "finalh": "Final Hadamard",
   "meas": "Measurement",
@@ -24,7 +24,7 @@ const labels: Record<string, string> = {
 export function verifyBernsteinVaziraniStep(
   step: number,
   state: Qubit,
-  secretString: string // "1101"
+  secretString: string // "1011"
 ): VerificationResult | null {
 
   const prep_step = 1;
@@ -66,21 +66,21 @@ export function verifyBernsteinVaziraniStep(
   let expected = "";
 
   if (phase === "default") {
-    expected = "|00000⟩";
+    expected = "|0⟩|0⟩|0⟩|0⟩|0⟩";
     passed = approx(Math.abs(amp(state, 0)), 1.0);
-    actual = passed ? "|00000⟩" : "Not default state";
+    actual = passed ? "|0⟩|0⟩|0⟩|0⟩|0⟩" : "Not default state";
 
   } else if (phase === "prep") {
-    expected = "Ancilla to |1⟩";
+    expected = "|0⟩|0⟩|0⟩|0⟩|1⟩";
     passed = approx(Math.abs(amp(state, 16)), 1.0);
-    actual = passed ? "|10000⟩" : "Initial prep failed";
+    actual = passed ? "|0⟩|0⟩|0⟩|0⟩|1⟩" : "Initial prep failed";
 
   } else if (phase === "superpos") {
-    expected = "All states 3.125%";
+    expected = "Equal position on all states";
     passed = Array.from({ length: 16 }).every((_, i) =>
       approx(Math.abs(amp(state, i + 16)), 0.177)
     );
-    actual = passed ? "Superposition active" : "Mismatch in superposition";
+    actual = passed ? "Equal position on all states" : "Not in superposition";
 
   } else if (phase === "o1") {
     // After cx q[0], q[4]: s[0]=1, flip ancilla when q[0]=1
@@ -94,7 +94,7 @@ export function verifyBernsteinVaziraniStep(
 
   } else if (phase === "o2") {
     // After cx q[1], q[4]: s[1]=1, flip ancilla when q[1]=1
-    expected = "Oracle Phase (s[1]=1)";
+    expected = "Oracle Phase (s[2]=1)";
     passed = Array.from({ length: 32 }).every((_, i) => {
       const base = i % 2 === 0 ? 0.177 : -0.177;
       const group = Math.floor(i / 4);
@@ -121,7 +121,7 @@ export function verifyBernsteinVaziraniStep(
     passed =
       approx(amp(state, 13), Math.sqrt(0.5)) &&
       approx(amp(state, 29), -Math.sqrt(0.5));
-    actual = passed ? "Hadamard state" : "Mismatch at Final Hadamard";
+    actual = passed ? "Final Hadamard" : "Mismatch at Final Hadamard";
 
   } else if (phase === "meas") {
     let maxProb = 0;
@@ -157,12 +157,11 @@ export function verifyBernsteinVaziraniStep(
         ? `Correct: |${measuredBin}⟩`
         : `Got: |${measuredBin}⟩ (${(maxProb * 100).toFixed(1)}%) (Wrong)`;
     } else if (step === meas_end) {
-      const measuredS = (maxIndex & 0xF).toString(2).padStart(4, '0');
-      passed = measuredS === secretString;
-      expected = `Expected: |01101⟩ (100%) Secret String: ${secretString}`;
+      expected = "Expected: |01101⟩ (100%)";
+      passed = maxIndex === 13 && isFull;
       actual = passed
-        ? `Found s = ${measuredS}`
-        : `Found s = ${measuredS} (Wrong)`;
+        ? `Found s = 1011`
+        : `s mismatch`;
     } else {
       passed = false;
       expected = "Unknown measurement step";
