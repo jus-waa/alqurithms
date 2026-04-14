@@ -24,7 +24,6 @@ const labels: Record<string, string> = {
 export function verifyBernsteinVaziraniStep(
   step: number,
   state: Qubit,
-  secretString: string // "1011"
 ): VerificationResult | null {
 
   const prep_step = 1;
