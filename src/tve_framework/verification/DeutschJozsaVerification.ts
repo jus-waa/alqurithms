@@ -3,6 +3,8 @@ import type { Qubit } from "../../engine/qubit/Qubit";
 import { approx } from "./DeutschVerification";
 import { amp } from "./DeutschVerification";
 
+import { computeFidelity, fidelityPercent } from "../../utils/fidelity";
+
 export type VerificationResult = {
   step: number;
   label: string;
@@ -23,6 +25,154 @@ const labels: Record<string, string> = {
   "finalh": "Final Hadamard",
   "meas": "Measurement",
 };
+
+const deutschJozsaFidelityHistory: {
+  step: number;
+  phase: string;
+  fidelity: number;
+  fidelityText: string;
+}[] = [];
+
+function saveDeutschJozsaFidelity(step: number, phase: string, fidelityValue: number) {
+  const entry = {
+    step,
+    phase,
+    fidelity: fidelityValue,
+    fidelityText: fidelityPercent(fidelityValue),
+  };
+
+  const existingIndex = deutschJozsaFidelityHistory.findIndex(
+    (item) => item.step === step && item.phase === phase
+  );
+
+  if (existingIndex >= 0) {
+    deutschJozsaFidelityHistory[existingIndex] = entry;
+  } else {
+    deutschJozsaFidelityHistory.push(entry);
+  }
+}
+
+function getExpectedDeutschJozsaState(phase: string, step: number): number[] | null {
+  if (phase === "default") {
+    return [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  }
+
+  if (phase === "prep") {
+    return [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0];
+  }
+
+  if (phase === "superpos") {
+    return [
+      0.25, 0.25, 0.25, 0.25,
+      0.25, 0.25, 0.25, 0.25,
+      -0.25, -0.25, -0.25, -0.25,
+      -0.25, -0.25, -0.25, -0.25,
+    ];
+  }
+
+  if (phase === "oracle_1") {
+    if (step === 4) {
+      return [
+         0.25,  0.25,  0.25,  0.25,
+         0.25,  0.25,  0.25,  0.25,
+        -0.25, -0.25, -0.25, -0.25,
+        -0.25, -0.25, -0.25, -0.25,
+      ];
+    }
+    if (step === 5) {
+      return [
+         0.25,  0.25,  0.25,  0.25,
+         0.25,  0.25,  0.25, -0.25,
+        -0.25, -0.25, -0.25, -0.25,
+        -0.25, -0.25, -0.25,  0.25,
+      ];
+    }
+    if (step === 6) {
+      const negativeIndices = [4, 8, 9, 10, 11, 13, 14, 15];
+      return Array.from({ length: 16 }, (_, i) =>
+        negativeIndices.includes(i) ? -0.25 : 0.25
+      );
+    }
+  }
+
+  if (phase === "oracle_2") {
+    if (step === 8) {
+      const negativeIndices = [5, 8, 9, 10, 11, 12, 14, 15];
+      return Array.from({ length: 16 }, (_, i) =>
+        negativeIndices.includes(i) ? -0.25 : 0.25
+      );
+    }
+    if (step === 9) {
+      const negativeIndices = [5, 7, 8, 9, 10, 11, 12, 14];
+      return Array.from({ length: 16 }, (_, i) =>
+        negativeIndices.includes(i) ? -0.25 : 0.25
+      );
+    }
+    if (step === 10) {
+      const negativeIndices = [4, 6, 8, 9, 10, 11, 13, 15];
+      return Array.from({ length: 16 }, (_, i) =>
+        negativeIndices.includes(i) ? -0.25 : 0.25
+      );
+    }
+  }
+
+  if (phase === "oracle_3") {
+    if (step === 12) {
+      const negativeIndices = [0, 2, 9, 11, 12, 13, 14, 15];
+      return Array.from({ length: 16 }, (_, i) =>
+        negativeIndices.includes(i) ? -0.25 : 0.25
+      );
+    }
+    if (step === 13) {
+      const negativeIndices = [0, 2, 7, 9, 11, 12, 13, 14];
+      return Array.from({ length: 16 }, (_, i) =>
+        negativeIndices.includes(i) ? -0.25 : 0.25
+      );
+    }
+    if (step === 14) {
+      const negativeIndices = [3, 4, 6, 8, 9, 10, 13, 15];
+      return Array.from({ length: 16 }, (_, i) =>
+        negativeIndices.includes(i) ? -0.25 : 0.25
+      );
+    }
+  }
+
+  if (phase === "oracle_4") {
+    if (step === 16) {
+      const negativeIndices = [3, 4, 6, 7, 8, 9, 10, 13];
+      return Array.from({ length: 16 }, (_, i) =>
+        negativeIndices.includes(i) ? -0.25 : 0.25
+      );
+    }
+    if (step === 17) {
+      const negativeIndices = [0, 2, 7, 9, 11, 12, 13, 14];
+      return Array.from({ length: 16 }, (_, i) =>
+        negativeIndices.includes(i) ? -0.25 : 0.25
+      );
+    }
+    if (step === 18) {
+      const negativeIndices = [3, 4, 6, 8, 9, 10, 13, 15];
+      return Array.from({ length: 16 }, (_, i) =>
+        negativeIndices.includes(i) ? -0.25 : 0.25
+      );
+    }
+  }
+
+  if (phase === "finalh") {
+    const zeroIndices = [0, 1, 6, 7, 8, 9, 14, 15];
+    const positiveIndices = [2, 4, 5, 11];
+    const negativeIndices = [3, 10, 12, 13];
+
+    return Array.from({ length: 16 }, (_, i) => {
+      if (zeroIndices.includes(i)) return 0;
+      if (positiveIndices.includes(i)) return 0.354;
+      if (negativeIndices.includes(i)) return -0.354;
+      return 0;
+    });
+  }
+
+  return null;
+}
 
 export function verifyDeutschJozsaStep(
   step: number,
@@ -254,6 +404,10 @@ export function verifyDeutschJozsaStep(
       } else {
         actual = "Final measurement mismatch. " ;
       }
+
+      console.log("=== Deutsch-Jozsa Fidelity Summary ===");
+      console.table(deutschJozsaFidelityHistory);
+
     }
   }
   const logicalStepNum = {
@@ -268,5 +422,17 @@ export function verifyDeutschJozsaStep(
     "meas": 5
   }[phase] ?? -1;
 
+const expectedVec = getExpectedDeutschJozsaState(phase, step);
+
+if (expectedVec) {
+  const actualVec = Array.from({ length: 16 }, (_, i) => amp(state, i));
+  const F = computeFidelity(actualVec, expectedVec);
+
+  saveDeutschJozsaFidelity(step, phase, F);
+
+  console.log(
+    `Deutsch-Jozsa Step ${step} Fidelity: ${fidelityPercent(F)}`
+  );
+}
   return { step: logicalStepNum, label, passed, expected, actual };
 }
