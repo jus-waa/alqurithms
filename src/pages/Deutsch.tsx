@@ -4,6 +4,8 @@ import Circuit from '../circuit_builder/Circuit'
 import { zeroState } from '../engine/qubit/Qubit';
 import type { CircuitConfig } from '../engine/types/CircuitConfig';
 import { verifyDeutschStep, type DeutschFunction } from '../tve_framework/verification/DeutschVerification';
+import { explainDeutschStep } from '../tve_framework/explanation/DeutschExplanation';
+import { openQASMDeutschStep } from '../tve_framework/explanation/openQASM/DeutschOpenQASM';
 
 const deutschConfig: CircuitConfig = {
   algoName: "Deutsch", 
@@ -129,15 +131,17 @@ const Deutsch = () => {
           config={deutschConfig} 
           steps={steps} 
           onStepChange={handleStep} 
-          verifyStep={(step, state) => verifyDeutschStep(step, state, selectedFunction)}/>
+          verifyStep={(step, state) => verifyDeutschStep(step, state, selectedFunction)}
+          explainStep={(step) => explainDeutschStep(step, selectedFunction)}
+          openQASMStep={(step) => openQASMDeutschStep(step, selectedFunction)}/>
           {showOracleModal && (
-            <div className="fixed inset-0 flex items-center justify-center bg-black/50 border z-20">
-              <div className="bg-white p-6 rounded-lg flex flex-col gap-3 z-10 border">
+            <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-20">
+              <div className="bg-white p-6 rounded-lg flex flex-col gap-3 z-10 border border-black/50">
                 <div className="modal">
-                  <button onClick={() => choose("f0")} className='border p-2 m-2 cursor-pointer'> f(x)=0 </button>
-                  <button onClick={() => choose("f1")} className='border p-2 m-2 cursor-pointer'> f(x)=1 </button>
-                  <button onClick={() => choose("f2")} className='border p-2 m-2 cursor-pointer'> f(x)=2 </button>
-                  <button onClick={() => choose("f3")} className='border p-2 m-2 cursor-pointer'> f(x)=3 </button>
+                  <button onClick={() => choose("f0")} className='border border-black/20 rounded-sm p-2 m-2 cursor-pointer'> f(x)=0 </button>
+                  <button onClick={() => choose("f1")} className='border border-black/20 rounded-sm p-2 m-2 cursor-pointer'> f(x)=1 </button>
+                  <button onClick={() => choose("f2")} className='border border-black/20 rounded-sm p-2 m-2 cursor-pointer'> f(x)=2 </button>
+                  <button onClick={() => choose("f3")} className='border border-black/20 rounded-sm p-2 m-2 cursor-pointer'> f(x)=3 </button>
                 </div>
               </div>
             </div>

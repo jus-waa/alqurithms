@@ -15,8 +15,8 @@ export type VerificationResult = {
 
 // "" are for barriers
 const labels: Record<string, string> = {
-  "default": "Default State",
-  "prep": "Initial State",
+  "default": "Initial State",
+  "prep": "Preparation",
   "superpos": "Superposition",
   "oracle_1": "Oracle",
   "oracle_2": "Oracle",
@@ -206,7 +206,7 @@ export function verifyDeutschJozsaStep(
     phase = "oracle_2";
   } else if (step >= oracle_step_3 && step < oracle_step_3_end) {
     phase = "oracle_3";
-  } else if (step >= oracle_step_4 && step < oracle_step_4_end) {
+  } else if (step >= oracle_step_4 && step <= oracle_step_4_end) {
     phase = "oracle_4";
   } else if (step === finalh_step) {
     phase = "finalh";
@@ -220,13 +220,13 @@ export function verifyDeutschJozsaStep(
   let expected = "";
   
   if (phase === "default") {
-    expected = "|0⟩|0⟩";
+    expected = "|0⟩|0⟩|0⟩|0⟩";
     passed = approx(Math.abs(amp(state, 0)), 1.0);
-    actual = passed ? "|0⟩|0⟩" : "Not default state";
+    actual = passed ? "|0⟩|0⟩|0⟩|0⟩" : "Not default state";
   } else if (phase === "prep") {
-    expected = "|0⟩|1⟩";
+    expected = "|0⟩|0⟩|0⟩|1⟩";
     passed = approx(Math.abs(amp(state, 8)), 1.0); 
-    actual = passed ? "|0⟩|1⟩" : "Incorrect initial state";
+    actual = passed ? "|0⟩|0⟩|0⟩|1⟩" : "Incorrect initial state";
   } else if (phase === "superpos") {
     expected = "Equal position on all states";
     passed = [0, 1, 2, 3, 4, 5, 6 , 7, 8, 9, 10, 11, 12, 13, 14, 15]
@@ -343,7 +343,7 @@ export function verifyDeutschJozsaStep(
       actual = passed ? "|+⟩|−⟩" : "Oracle mismatch";
     } else if (step === 17) {
       expected = "|+⟩|−⟩";
-      const negativeIndices = [0, 2, 7, 9, 11, 12, 13, 14];
+      const negativeIndices = [3, 4, 6, 7, 8, 9, 10, 13];
       passed = Array.from({length: 16}).every((_, i) => {
         if (negativeIndices.includes(i)) {
           return approx(amp(state, i), -0.25);
@@ -352,18 +352,7 @@ export function verifyDeutschJozsaStep(
         }
       });      
       actual = passed ? "|+⟩|−⟩" : "Oracle mismatch";
-    } else if (step === 18) {
-      expected = "|+⟩|−⟩";
-      const negativeIndices = [3, 4, 6, 8, 9, 10, 13, 15];
-      passed = Array.from({length: 16}).every((_, i) => {
-        if (negativeIndices.includes(i)) {
-          return approx(amp(state, i), -0.25);
-        } else {
-          return approx(amp(state, i), 0.25);
-        }
-      });      
-      actual = passed ? "|+⟩|−⟩" : "Oracle mismatch";
-    }
+    } 
   } else if (phase === "finalh") {
     expected = "Final Hadamard";
     const zeroIndices = [0, 1, 6, 7, 8, 9, 14, 15];
@@ -397,24 +386,23 @@ export function verifyDeutschJozsaStep(
     if (step === meas_start) {
       expected = "Measure q0 (~50% Prob)";
       passed = approx(maxProb, 0.50); 
-      actual = passed ? "q0 sampled correctly (~50%)" : `q0 mismatch (got ${(maxProb * 100).toFixed(1)}%)`;
+      actual = passed ? "q0 measured correctly (~50%)" : `q0 mismatch (got ${(maxProb * 100).toFixed(1)}%)`;
     } else if (step === meas_start + 1) {
       expected = "Measure q1 (~25% Prob)";
       passed = approx(maxProb, 0.25);
-      actual = passed ? "q1 sampled correctly (~25%)" : `q1 mismatch (got ${(maxProb * 100).toFixed(1)}%)`;
+      actual = passed ? "q1 measured correctly (~25%)" : `q1 mismatch (got ${(maxProb * 100).toFixed(1)}%)`;
     } else if (step === meas_end) {
-      expected = "Final Output (~25% Prob)";
+      expected = "Measure q2 (~25% Prob): Function is Balanced";
       passed = approx(maxProb, 0.25);
       if (passed) {
         const measuredStateWithoutAncilla = maxIndex >> 1; 
         if (measuredStateWithoutAncilla === 0) {
-          actual = "Function is Constant (Measured |000⟩)";
+          actual = "Function is Constant";
         } else {
-          const bitstring = maxIndex.toString(2).padStart(4, '0');
-          actual = `Function is Balanced (Measured state |${bitstring}⟩)`;
+          actual = "q2 measured correctly (~25%)";
         }
       } else {
-        actual = `Final measurement mismatch (got ${(maxProb * 100).toFixed(1)}%)`;
+        actual = "Final measurement mismatch. " ;
       }
 
       console.log("=== Deutsch-Jozsa Fidelity Summary ===");

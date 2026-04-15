@@ -3,6 +3,8 @@ import Circuit from '../circuit_builder/Circuit'
 import { zeroState } from '../engine/qubit/Qubit';
 import type { CircuitConfig } from '../engine/types/CircuitConfig';
 import { verifyDeutschJozsaStep } from '../tve_framework/verification/DeutschJozsaVerification';
+import { explainDeutschJozsaStep } from '../tve_framework/explanation/DeutschJozsaExplanation';
+import { openQASMDeutschJozsaStep } from '../tve_framework/explanation/openQASM/DeutschJozsaOpenQASM';
 
 const deutschJozsaConfig: CircuitConfig = {
   algoName: "Deutsch-Jozsa", 
@@ -138,7 +140,9 @@ const DeutschJozsa = () => {
         <Circuit 
         config={deutschJozsaConfig} 
         steps={steps}
-        verifyStep={(step, state) => verifyDeutschJozsaStep(step, state)}/>
+        verifyStep={(step, state) => verifyDeutschJozsaStep(step, state)}
+        explainStep={(step) => explainDeutschJozsaStep(step)}
+        openQASMStep={(step) => openQASMDeutschJozsaStep(step)}/>
       </div>
     </Layout>
   )

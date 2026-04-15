@@ -1,4 +1,5 @@
 import type { VerificationResult } from "./DeutschVerification"
+
 interface Props {
   result: VerificationResult | null;
   currentStep: number; // do not remove

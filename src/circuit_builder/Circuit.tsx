@@ -21,6 +21,10 @@ import type { Qubit } from "../engine/qubit/Qubit";
 import VerticalLines from "../tve_framework/trace/VerticalLines";
 import type { VerificationResult } from "../tve_framework/verification/DeutschVerification.ts";
 import Verification from "../tve_framework/verification/Verification";
+import Explanation from "../tve_framework/explanation/Explanation.tsx";
+import type { ExplanationResult } from "../tve_framework/explanation/DeutschExplanation.ts";
+import type { OpenQASMResult } from "../tve_framework/explanation/openQASM/DeutschOpenQASM.ts";
+import OpenQASM from "../tve_framework/explanation/openQASM/OpenQASM.tsx";
 
 type GateStep = {
   lineId: string;
@@ -42,10 +46,12 @@ interface CircuitProps {
   config: CircuitConfig;
   steps: GateStep[][];
   verifyStep?: (step: number, state: Qubit) => VerificationResult | null;
+  explainStep?: (step: number) => ExplanationResult | null;
+  openQASMStep?: (step: number) => OpenQASMResult | null;
   onStepChange?: (step: number) => Promise<void> | void;
 }
 
-const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
+const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepChange }:CircuitProps) => {
   const [state, setState] = useState(config.initialState) //e.g. ket0000 = 0000
   const [slots, setSlots] = useState<Record<string, string[]>> (
     Object.fromEntries(
@@ -56,6 +62,8 @@ const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
   const [pending, setPending] = useState<{lineId: string, lineIndex: number, instanceId: string} | null>(null);
   const [showModal, setShowModal] = useState(false);  
 
+  const [QASMResult, setQASMResult] = useState<OpenQASMResult | null>(null);
+  const [explanationResult, setExplanationResult] = useState<ExplanationResult | null>(null);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const [currentVerifyStep, setCurrentVerifyStep] = useState(0);
   const currentStateRef = useRef<Qubit>(config.initialState);
@@ -426,16 +434,23 @@ const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
       setSlots(config.presetSlots);
     }
   }, [config])
-  //
+  // verification, explanation
   useEffect(() => {
-    if (!verifyStep) return; //  || currentVerifyStep === 0
-    const result = verifyStep(currentVerifyStep, currentStateRef.current);
-    console.log("Verification:", result)
+    if (!verifyStep || !explainStep || !openQASMStep) return; 
+    const verifyResult = verifyStep(currentVerifyStep, currentStateRef.current);
+    const explainResult = explainStep(currentVerifyStep);
+    const QASMResult = openQASMStep(currentVerifyStep);
+
+    console.log("Verification:", verifyResult);
+    console.log("Explanation:", explainResult);
+    console.log("OpenQASM:", QASMResult);
      // only update on real steps, skip barriers
-    if (result !== null) {
-      setVerificationResult(result);
+    if (verifyResult !== null || explainResult !== null || QASMResult) {
+      setVerificationResult(verifyResult);
+      setExplanationResult(explainResult);
+      setQASMResult(QASMResult);
     }
-  }, [currentVerifyStep, verifyStep]);
+  }, [currentVerifyStep, verifyStep, explainStep, openQASMStep]);
 
   return (
       <div className="flex flex-col h-full w-full gap-2">
@@ -449,27 +464,16 @@ const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
             <QSphere state = {state} qubitCount = {config.qubitCount} />
           </div>
           {/* Explanation Box */}
-          <div className="w-full">
-            <div className="flex flex-col gap-2 p-4 border border-black/20 rounded-lg bg-white h-full">
-              <div className="flex flex-col gap-3 p-4 border border-black/20 h-full rounded-sm">
-                <h3>Explanation</h3>
-                <div className="flex flex-1 items-start">
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    <span className="text-gray-400 italic">
-                      Press play or step forward to begin.
-                    </span>
-                  </p>
-                </div>
-                <div className="text-xs text-gray-400 text-right">
-                  Step
-                </div>
+          <div className="grid grid-cols-1 grid-rows-2 gap-2 p-4 border border-black/20 rounded-lg bg-white">
+              <div>
+                <h3 className="pl-2 pb-4">Explanation</h3>
+                <Explanation result={explanationResult} currentStep={currentVerifyStep}/>
               </div>
               <div>
                 <h3 className="pl-2">Verification</h3>
                 <Verification result={verificationResult} currentStep={currentVerifyStep} />
               </div>
             </div>
-          </div>
         </div>
         {/* Lower part */}
         <div className="grid flex-1 grid-cols-[1fr_3.5fr_1fr] gap-2">
@@ -489,7 +493,7 @@ const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
             {/* Quantum Circuit */}
             <div className="flex flex-col gap-2 h-full">
               {/* Circuit Builder*/}
-              <div ref={circuitContainerRef} className="relative flex-1 gap-4 p-4 border border-black/20 rounded-lg bg-white">
+              <div ref={circuitContainerRef} className="relative h-90 gap-4 p-4 border border-black/20 rounded-lg bg-white">
                 <h3 className="pl-2">Quantum Circuit</h3>
                 <div>
                   {lines.map((line) => (
@@ -545,7 +549,7 @@ const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
                 />
               </div>
               {/* Circuit Player*/}
-              <div className="relative flex items-center justify-center p-4 h-24 border border-black/20 rounded-lg bg-white">
+              <div className="relative flex flex-1 items-center justify-center p-4 h-24 border border-black/20 rounded-lg bg-white">
                 {/* Reset*/}
                 <div onClick={reset} className="absolute top-3 right-3 cursor-pointer">
                   <img src="../../assets/reset.png" alt="Reset" className="h-5 w-5" />
@@ -567,14 +571,11 @@ const Circuit = ( {config, steps, verifyStep, onStepChange }:CircuitProps) => {
                 </div>
               </div>
             </div>
-            {/* Temporary to fillup space (OpenQASM Code Viewer) */}
-            {/* not necessarily needed inside dndcontext? ata> */}
-            <div className="w-full">
-              <div className="grid gap-4 p-4 border border-black/20 rounded-lg place-content-center bg-white h-full">
-                <h3 className="pl-2">OpenQASM 3.0</h3>
-                {/* List of gates */}
-                <div className="grid grid-cols-6 grid-rows-4 border border-black/20 rounded-lg p-2 gap-2 h-full">
-                </div>
+            {/* OpenQASM Code Viewer */}
+            <div className="flex flex-col gap-2 p-4 border border-black/20 rounded-lg bg-white">
+              <div className="w-full h-90 min-h-0">
+                <h3 className="pl-2 pb-4">OpenQASM Code Viewer</h3>
+                <OpenQASM result={QASMResult} currentStep={currentVerifyStep} />
               </div>
             </div>
           </DndContext>
