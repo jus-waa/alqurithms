@@ -101,7 +101,7 @@ const BernsteinVazirani = () => {
         <Circuit 
           config={bernsteinVaziraniConfig} 
           steps={steps}
-          verifyStep={(step, state) => verifyBernsteinVaziraniStep(step, state, secret)}
+          verifyStep={(step, state) => verifyBernsteinVaziraniStep(step, state)}
           explainStep={(step) => explainBernsteinVaziraniStep(step)}
           openQASMStep={(step) => openQASMBernsteinVaziraniStep(step)}/>
       </div>

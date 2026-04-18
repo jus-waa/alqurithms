@@ -15,17 +15,15 @@ export function fidelity(actual: number[], expected: number[]): number {
     dot += actual[i] * expected[i];
   }
 
-  return dot * dot;
+  const f = dot * dot;
+  return Math.min(1, Math.max(0, f));
 }
 
-// Normalizes a vector to unit length
 export function normalize(vec: number[]): number[] {
   const norm = Math.sqrt(vec.reduce((sum, v) => sum + v * v, 0));
-
   if (norm === 0) {
     throw new Error("Cannot normalize a zero vector.");
   }
-
   return vec.map(v => v / norm);
 }
 
