@@ -472,7 +472,7 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
             <div>
               <Probabilities state={state}/>
             </div>
-            <div className="flex flex-col items-center overflow-hidden">
+            <div className="flex flex-col items-end overflow-hidden">
               <div className="font-mono text-xs text-gray-600 w-4/5 h-[27.5rem] overflow-y-auto">
                  {displayState.map(({ label, amp }) => (
                   <div key={label} className="flex gap-2">
