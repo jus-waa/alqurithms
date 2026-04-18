@@ -64,7 +64,7 @@ function getExpectedDeutschState(phase: string, fn: DeutschFunction, step: numbe
 
   if (phase === "prep") return [0, 0, 1, 0]; // little endian
 
-  if (phase === "superpos") return [0.5, 0.5, 0.5, 0.5];
+  if (phase === "superpos") return [0.5, 0.5, -0.5, -0.5];
 
   if (phase === "oracle") {
     if (fn === "f0") return [0.5, 0.5, -0.5, -0.5];

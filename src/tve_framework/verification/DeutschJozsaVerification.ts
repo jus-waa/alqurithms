@@ -145,7 +145,7 @@ function getExpectedDeutschJozsaState(phase: string, step: number): number[] | n
       );
     }
     if (step === 17) {
-      const negativeIndices = [0, 2, 7, 9, 11, 12, 13, 14];
+      const negativeIndices = [3, 4, 6, 7, 8, 9, 10, 13];
       return Array.from({ length: 16 }, (_, i) =>
         negativeIndices.includes(i) ? -0.25 : 0.25
       );
