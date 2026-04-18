@@ -62,6 +62,8 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
   const [pending, setPending] = useState<{lineId: string, lineIndex: number, instanceId: string} | null>(null);
   const [showModal, setShowModal] = useState(false);  
 
+  const [displayState, setDisplayState] = useState<{label: string, amp: number, prob: number}[]>([]);
+
   const [QASMResult, setQASMResult] = useState<OpenQASMResult | null>(null);
   const [explanationResult, setExplanationResult] = useState<ExplanationResult | null>(null);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
@@ -390,7 +392,6 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
     if (measuredBits.length > 0) {
       const measuredState = measureQubit(currentState, measuredBits, config.qubitCount);
       currentStateRef.current = measuredState;
-
       console.group(`%c⟨ψ| Statevector — ${config.qubitCount} qubits`, 'color: #6929c4; font-weight: bold; font-size: 13px');
       currentStateRef.current.forEach((amp, i) => {
         const label = `|${i.toString(2).padStart(config.qubitCount, '0')}⟩`;
@@ -406,6 +407,7 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
       });
       console.groupEnd();
       setState(measuredState);
+      displayStates(measuredState);
     } else {
       console.group(`%c⟨ψ| Statevector — ${config.qubitCount} qubits`, 'color: #6929c4; font-weight: bold; font-size: 13px');
       currentStateRef.current.forEach((amp, i) => {
@@ -422,7 +424,17 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
       });
       console.groupEnd();
       setState(currentState);
+      displayStates(currentState);
     }
+  }
+
+  function displayStates(state: Qubit) {
+    const e = state.map((amp, i) => ({
+      label: `|${i.toString(2).padStart(config.qubitCount, '0')}⟩`,
+      amp,
+      prob: amp * amp * 100,
+    })). filter(({amp}) => Math.abs(amp) > 0.0001);
+    setDisplayState(e);
   }
   // execute everytime a gate is dropped in the slot
   useEffect(() => {
@@ -455,9 +467,21 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
   return (
       <div className="flex flex-col h-full w-full gap-2">
         {/* Upper part */}
-        <div className="grid flex-1 grid-cols-[2.3fr_2fr_1.5fr] gap-2">
-          <div className="w-full">
-            <Probabilities state={state}/>
+        <div className="grid flex-1 grid-cols-[2.3fr_1fr_1.5fr] gap-2">
+          <div className="border border-black/20 p-4 rounded-lg bg-white h-full w-full grid grid-cols-[4fr_1fr] overflow-scroll">
+            <div>
+              <Probabilities state={state}/>
+            </div>
+            <div className="flex flex-col items-center overflow-hidden">
+              <div className="font-mono text-xs text-gray-600 w-4/5 h-[27.5rem] overflow-y-auto">
+                 {displayState.map(({ label, amp }) => (
+                  <div key={label} className="flex gap-2">
+                    <span className="text-blue-500">{label}</span>
+                    <span className="text-gray-400">amp: {amp.toFixed(4)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           {/* Q SPhere */}
           <div className="w-full">

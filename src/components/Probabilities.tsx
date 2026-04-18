@@ -74,7 +74,7 @@ const Probabilities = ({ state }: ProbabilitiesProps) => {
   }
 
   return (
-    <div className="border border-black/20 p-4 rounded-lg bg-white h-full flex flex-col">
+    <div className="">
       <div className="flex items-center justify-between mb-2 px-1">
         <h3>Probabilities</h3>
       </div>
