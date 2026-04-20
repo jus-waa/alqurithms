@@ -15,8 +15,7 @@ export function fidelity(actual: number[], expected: number[]): number {
     dot += actual[i] * expected[i];
   }
 
-  const f = dot * dot;
-  return Math.min(1, Math.max(0, f));
+  return dot * dot;
 }
 
 export function normalize(vec: number[]): number[] {
