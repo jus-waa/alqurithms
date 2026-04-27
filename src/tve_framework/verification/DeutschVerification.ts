@@ -1,4 +1,5 @@
 import type { Qubit } from "../../engine/qubit/Qubit";
+import { computeFidelity, fidelityPercent } from "../../utils/fidelity";
 
 export type DeutschFunction = "f0" | "f1" | "f2" | "f3";
 
@@ -31,6 +32,61 @@ const labels: Record<string, string> = {
   "finalh": "Final Hadamard",
   "meas": "Measurement",
 };
+
+const deutschFidelityHistory: {
+  step: number;
+  phase: string;
+  fidelity: number;
+  fidelityText: string;
+}[] = [];
+
+function saveDeutschFidelity(step: number, phase: string, fidelityValue: number) {
+  const entry = {
+    step,
+    phase,
+    fidelity: fidelityValue,
+    fidelityText: fidelityPercent(fidelityValue),
+  };
+
+  const existingIndex = deutschFidelityHistory.findIndex(
+    (item) => item.step === step && item.phase === phase
+  );
+
+  if (existingIndex >= 0) {
+    deutschFidelityHistory[existingIndex] = entry;
+  } else {
+    deutschFidelityHistory.push(entry);
+  }
+}
+
+function getExpectedDeutschState(phase: string, fn: DeutschFunction, step: number): number[] | null {
+  if (phase === "default") return [1, 0, 0, 0];
+
+  if (phase === "prep") return [0, 0, 1, 0]; // little endian
+
+  if (phase === "superpos") return [0.5, 0.5, -0.5, -0.5];
+
+  if (phase === "oracle") {
+    if (fn === "f0") return [0.5, 0.5, -0.5, -0.5];
+    if (fn === "f1") return [0.5, -0.5, -0.5, 0.5];
+
+    if (fn === "f2") {
+      if (step === 4) return [0.5, -0.5, -0.5, 0.5];
+      if (step === 5) return [0.5, 0.5, -0.5, -0.5];
+      return [0.5, -0.5, -0.5, 0.5];
+    }
+
+    if (fn === "f3") return [0.5, 0.5, 0.5, 0.5];
+  }
+
+  if (phase === "finalh") {
+    if (fn === "f0") return [Math.sqrt(0.5), 0, -Math.sqrt(0.5), 0];
+    if (fn === "f3") return [Math.sqrt(0.5), 0, Math.sqrt(0.5), 0];
+    return [0, Math.sqrt(0.5), 0, -Math.sqrt(0.5)];
+  }
+
+  return null;
+}
 
 export function verifyDeutschStep(
   step: number,
@@ -160,6 +216,17 @@ export function verifyDeutschStep(
       passed = max === 1 || max === 3;
       actual = passed ? "f(0) ⊕ f(1) = 1" : "Incorrect Measurement";
     }
+    console.log("=== Deutsch Fidelity Summary ===");
+    console.table(deutschFidelityHistory);
+
+    const lastEntry = deutschFidelityHistory[deutschFidelityHistory.length - 1];
+
+    if (lastEntry) {
+      console.log(
+        `Final Fidelity (${lastEntry.phase}): ${lastEntry.fidelityText}`
+      );
+}
+
   }
 
   const logicalStepNum = {
@@ -170,6 +237,26 @@ export function verifyDeutschStep(
     "finalh": 4,
     "meas": 5
   }[phase] ?? -1;
+  
+    // === FIDELITY LOGGING ===
+  const expectedVec = getExpectedDeutschState(phase, fn, step);
+
+  if (expectedVec) {
+    const actualVec = [
+      amp(state, 0),
+      amp(state, 1),
+      amp(state, 2),
+      amp(state, 3),
+    ];
+
+    const F = computeFidelity(actualVec, expectedVec);
+
+    saveDeutschFidelity(step, phase, F);
+
+    console.log(
+      `Deutsch Step ${step} Fidelity: ${fidelityPercent(F)}`
+    );
+  }
 
   return { step: logicalStepNum, label, passed, expected, actual };
 }
