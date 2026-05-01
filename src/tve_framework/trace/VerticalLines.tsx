@@ -1,5 +1,5 @@
 // lines for cnot and toffoli and measurement
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 
 interface MultiSlotMeta {
   control: number;
