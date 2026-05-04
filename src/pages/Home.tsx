@@ -4,12 +4,12 @@ import Layout from '../components/Layout'
 const Home = () => {
   return (
     <Layout>
-      <section className="flex flex-col justify-center items-center text-center bg-white border border-black/20 p-6 h-full rounded-lg">
+      <section className="flex flex-col justify-center items-center text-center bg-white border border-red-500 p-6 h-24 rounded-lg">
         <h1 className="text-3xl font-bold mb-4">
-          Discover. Trace. Understand Quantum Logic.
+          Trace-Verify-Explain 
         </h1>
         <p className="font-normal max-w-2xl mb-4">
-          Explore the foundational quantum algorithms through interactive visuals. Run simulations, build circuits, and understand algorithms with hands-on guidance.
+          The platform presents the Trace-Verification-Explanation (TVE) framework for quantum algorithm simulation. Tracing the step-by-step evolution of quantum states, verification of each step, and explanation of each stage.        
         </p>
         <Link
           to="/algorithms"
