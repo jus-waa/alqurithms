@@ -5,7 +5,7 @@ const Algorithms = () => {
   return (
     <Layout>
       <div className='h-full'>
-        <div className='grid grid-cols-3 items-center p-40 gap-6 border border-red-500 rounded-lg bg-white h-full'>
+        <div className='grid grid-cols-3 items-center p-40 gap-6 border border-black/20 rounded-lg bg-white h-full'>
           <Link to="/deutsch" className='flex justify-center items-end text-center h-24 pb-8 border border-black/20 rounded-lg bg-white'>
             Deutsch Algorithm
           </Link>
