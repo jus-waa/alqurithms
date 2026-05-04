@@ -1,11 +1,21 @@
 import { useEffect, useState, useRef} from "react"
 import { DndContext} from '@dnd-kit/core'
 
+import type { CircuitConfig } from "../engine/types/CircuitConfig";
+import type { Qubit } from "../engine/qubit/Qubit";
+import type { VerificationResult } from "../tve_framework/verification/DeutschVerification.ts";
+import type { ExplanationResult } from "../tve_framework/explanation/DeutschExplanation.ts";
+import type { OpenQASMResult } from "../tve_framework/explanation/openQASM/DeutschOpenQASM.ts";
+
 import Line from "./Line"
 import Gate from './Gate'
 import Probabilities from "../components/Probabilities";
 import MultiQubitModal from "../components/MultiQubitModal";
 import QSphere from "../components/QSphere";
+import useCircuitPlayer from "../tve_framework/trace/CircuitPlayer";
+import Verification from "../tve_framework/verification/Verification";
+import Explanation from "../tve_framework/explanation/Explanation.tsx";
+import OpenQASM from "../tve_framework/explanation/openQASM/OpenQASM.tsx";
 
 import { applyHadamardToQubit } from "../engine/gates/Hadamard";
 import { applyPauliXToQubit } from "../engine/gates/PauliX";
@@ -15,16 +25,7 @@ import { applyPauliIToQubit } from "../engine/gates/PauliI";
 import { applyPauliZToQubit } from "../engine/gates/PauliZ";
 import { applyBarrierToQubit } from "../engine/gates/Barrier";
 import { measureQubit } from "../engine/gates/Measurement.ts";
-import useCircuitPlayer from "../tve_framework/trace/CircuitPlayer";
-import type { CircuitConfig } from "../engine/types/CircuitConfig";
-import type { Qubit } from "../engine/qubit/Qubit";
 import VerticalLines from "../tve_framework/trace/VerticalLines";
-import type { VerificationResult } from "../tve_framework/verification/DeutschVerification.ts";
-import Verification from "../tve_framework/verification/Verification";
-import Explanation from "../tve_framework/explanation/Explanation.tsx";
-import type { ExplanationResult } from "../tve_framework/explanation/DeutschExplanation.ts";
-import type { OpenQASMResult } from "../tve_framework/explanation/openQASM/DeutschOpenQASM.ts";
-import OpenQASM from "../tve_framework/explanation/openQASM/OpenQASM.tsx";
 
 type GateStep = {
   lineId: string;
@@ -52,7 +53,16 @@ interface CircuitProps {
 }
 
 const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepChange }:CircuitProps) => {
-  const [state, setState] = useState(config.initialState) //e.g. ket0000 = 0000
+  config.locked = true; //disable drag and drop
+  const [state, setState] = useState(config.initialState) 
+  const [displayState, setDisplayState] = useState<{label: string, amp: number, prob: number}[]>([]);
+  const currentStateRef = useRef<Qubit>(config.initialState);
+  const measurementResultsRef = useRef<Record<string, Qubit>>({});  
+  const lines = Array.from({ length: config.qubitCount }, (_,i) => ({
+    id: `line-${i}`,
+    name: `q${i}`,
+  }));
+
   const [slots, setSlots] = useState<Record<string, string[]>> (
     Object.fromEntries(
       Array.from({ length: config.qubitCount }, (_, i) => [`line-${i}`, []])
@@ -62,27 +72,20 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
   const [pending, setPending] = useState<{lineId: string, lineIndex: number, instanceId: string} | null>(null);
   const [showModal, setShowModal] = useState(false);  
 
-  const [displayState, setDisplayState] = useState<{label: string, amp: number, prob: number}[]>([]);
-
   const [QASMResult, setQASMResult] = useState<OpenQASMResult | null>(null);
   const [explanationResult, setExplanationResult] = useState<ExplanationResult | null>(null);
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
   const [currentVerifyStep, setCurrentVerifyStep] = useState(0);
-  const currentStateRef = useRef<Qubit>(config.initialState);
 
-  const measurementResultsRef = useRef<Record<string, Qubit>>({});  const circuitContainerRef = useRef<HTMLDivElement>(null)
-  const gateRefs = useRef<Record<string, HTMLDivElement | null>>({})
-  const lineRefs = useRef<Record<string, HTMLDivElement | null>>({})
-  const lines = Array.from({ length: config.qubitCount }, (_,i) => ({
-    id: `line-${i}`,
-    name: `q${i}`,
-  }));
+  const circuitContainerRef = useRef<HTMLDivElement>(null);
+  const gateRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const lineRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  //player
   const stepsRef = useRef(steps);
   useEffect(() => {
     stepsRef.current = steps;
-  }, [steps])
-
+  }, [steps]);
   const {
     play: handlePlay,
     pause: handlePause,
@@ -96,11 +99,12 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
     setCurrentVerifyStep(step);
     if (onStepChange) await onStepChange(step);
   }
-
+  // clear measurement
   function reset() {
     measurementResultsRef.current = {};
     resetPlayer();
   }
+
   // helper to register a gate ref
   function registerGateRef(instanceId: string, lineIndex: number) {
     return (element: HTMLDivElement | null) => {
@@ -316,27 +320,21 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
   }
 
   function executeCircuit() {
-    //console.log("slots:", JSON.stringify(slots));
-    //console.log("multiSlots:", JSON.stringify(multiSlots));
-    // console.log("=== Initial State ===");
-    // config.initialState.forEach((amp, i) => {
-    //   console.log(`|${i.toString(2).padStart(config.qubitCount, '0')}⟩ : ${amp.toFixed(5)}`);
-    // });
+
     const initNonZero = config.initialState
       .map((amp, i) => ({ i, amp }))
       .filter(({ amp }) => Math.abs(amp) > 0.0001)
       .map(({ i, amp }) => `|${i.toString(2).padStart(config.qubitCount, '0')}⟩:${amp.toFixed(3)}`)
       .join("  ");
+
     console.log(`=== Initial State === ${initNonZero}`);
+
     let currentState: Qubit = [...config.initialState];
     const maxGates = Math.max(...Object.values(slots).map(gates => gates.length), 0);
-
     const measuredBits: number[] = [];
 
     for (let col = 0; col < maxGates; col++) {
-      
       let colState: Qubit = [...currentState];
-
       lines.forEach((line, lineIndex) => {
         const gatesOnLine = slots[line.id];
         const gateId = gatesOnLine[col];
@@ -375,12 +373,9 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
             measuredBits.push(lineIndex);
           }
         }
-        // console.log(`Step ${col}, Gate: ${gateType} on line ${lineIndex}`);
-        // colState.forEach((amp, i) => {
-        //   console.log(`|${i.toString(2).padStart(config.qubitCount, '0')}⟩ : ${amp.toFixed(5)}`);
-        // });
       });
       currentState = colState;
+      
       const nonZero = currentState
         .map((amp, i) => ({ i, amp }))
         .filter(({ amp }) => Math.abs(amp) > 0.0001)
@@ -388,7 +383,9 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
         .join("  ");
       console.log(`Step ${col}: ${nonZero || "(all zero)"}`);
     }
+    
     currentStateRef.current = currentState;
+    
     if (measuredBits.length > 0) {
       const measuredState = measureQubit(currentState, measuredBits, config.qubitCount);
       currentStateRef.current = measuredState;
@@ -506,7 +503,7 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
             <div className="flex flex-col gap-4 p-4 border border-black/20 rounded-lg  bg-white w-full h-full">
               <h3 className="pl-2 h-8">Gates</h3>
               {/* List of gates */}
-              <div className="grid grid-cols-6 grid-rows-8 border border-black/20 rounded-sm p-2 gap-2 h-full">
+              <div className="grid grid-cols-6 grid-rows-8 border border-black/20 rounded-sm p-2 gap-2 h-full pointer-events-none opacity-50">
                 {config.allowedGates.map(g => {
                   let displayName = g;
                   if (g === "CNOT") displayName = "⊕";

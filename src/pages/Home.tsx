@@ -6,10 +6,10 @@ const Home = () => {
     <Layout>
       <section className="flex flex-col justify-center items-center text-center bg-white border border-black/20 p-6 h-full rounded-lg">
         <h1 className="text-3xl font-bold mb-4">
-          Process-Oriented Quantum Algorithm Simulation
+          Trace-Verify-Explain 
         </h1>
         <p className="font-normal max-w-2xl mb-4">
-          Execute and observe quantum algorithms through structured state transformations. The platform presents the step-by-step evolution of quantum states, enabling trace, verification, and explanation of each operation within the circuit.
+          The platform presents the Trace-Verification-Explanation (TVE) framework for quantum algorithm simulation. Tracing the step-by-step evolution of quantum states, verification of each step, and explanation of each stage.        
         </p>
         <Link
           to="/algorithms"
