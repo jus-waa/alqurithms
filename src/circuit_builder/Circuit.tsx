@@ -53,7 +53,7 @@ interface CircuitProps {
 }
 
 const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepChange }:CircuitProps) => {
-  //config.locked = true; //disable drag and drop
+  config.locked = true; //disable drag and drop
   const [state, setState] = useState(config.initialState) 
   const [displayState, setDisplayState] = useState<{label: string, amp: number, prob: number}[]>([]);
   const [stateVectorString, setStateVectorString] = useState("");
@@ -512,7 +512,7 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
             <div className="flex flex-col gap-4 p-4 border border-black/20 rounded-lg  bg-white w-full h-full">
               <h3 className="pl-2 h-8">Gates</h3>
               {/* List of gates */}
-              <div className="grid grid-cols-6 grid-rows-8 border border-black/20 rounded-sm p-2 gap-2 h-full opacity-50">
+              <div className="grid grid-cols-6 grid-rows-8 border border-black/20 rounded-sm p-2 gap-2 h-full opacity-50 pointer-events-none">
                 {config.allowedGates.map(g => {
                   let displayName = g;
                   if (g === "CNOT") displayName = "⊕";
@@ -523,7 +523,7 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
             {/* Quantum Circuit */}
             <div className="flex flex-col gap-2 h-full">
               {/* Circuit Builder*/}
-              <div ref={circuitContainerRef} className="relative h-90 gap-4 p-4 border border-black/20 rounded-lg bg-white">
+              <div ref={circuitContainerRef} className="relative h-90 gap-4 p-4 border border-black/20 rounded-lg bg-white pointer-events-none">
                 <h3 className="pl-2">Quantum Circuit</h3>
                 <div>
                   {lines.map((line) => (
