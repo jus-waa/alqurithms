@@ -46,11 +46,11 @@ export function explainBernsteinVaziraniStep(step: number): ExplanationResult | 
 
   let explanation = "";
   if (step === oracle_step_1) {
-    explanation = "The oracle Uf begins encoding the hidden string s = 1011. A CNOT gate is applied where control is q[0] the first input qubit whose corresponding bit is 1, the target q[1]. This will be equal to 1000 when measured.";
+    explanation = "The oracle Uf begins encoding the hidden string s = 1011. A CNOT gate is applied where control is q[0] the first input qubit whose corresponding bit is 1, the target q[4]. This will be equal to 1000 when measured.";
   } else if (step === oracle_step_2) {
-    explanation = "The oracle continues encoding s = 1011. Another CNOT gate is applied where control is q[2] whose corresponding bit is 1, the target q[1]. This will be equal to 1010 when measured.";
+    explanation = "The oracle continues encoding s = 1011. Another CNOT gate is applied where control is q[2] whose corresponding bit is 1, the target q[4]. This will be equal to 1010 when measured.";
   } else if (step === oracle_step_3) {
-    explanation = "The oracle completes encoding s = 1011. Another CNOT gate is applied where control is q[2] whose corresponding bit is 1, the target q[1]. This will be equal to 1011 when measured.";
+    explanation = "The oracle completes encoding s = 1011. Another CNOT gate is applied where control is q[3] whose corresponding bit is 1, the target q[4]. This will be equal to 1011 when measured.";
   } else if (step >= meas_start && step <= meas_end) {
     explanation = measExplanations[step] ?? "";
   } else {
@@ -58,9 +58,9 @@ export function explainBernsteinVaziraniStep(step: number): ExplanationResult | 
       default: "Initially, states are |0⟩|0⟩|0⟩|0⟩|0⟩. Barrier gates will be applied throughout the algorithm to separate pieces of the circuit properly.",
       prep: "Then, the preparation of initial states will set up the first n input qubits to |0⟩ and the last qubit known as auxiliary qubit, to |1⟩ by applying a Pauli-X gate on it, flipping the ancilla from |0⟩ to |1⟩ before creating the |−⟩ state.",
       superpos: "Hadamard gates are applied to all input qubits (q[0] to q[3]), creating a superposition of all 16 possible 4-bit input strings from |0000⟩ to |1111⟩, demonstrating quantum parallelism as the circuit evaluates all possible inputs x simultaneously.",
-      o1: "The oracle Uf begins encoding the hidden string s = 1011. A CNOT gate is applied where control is q[0] the first input qubit whose corresponding bit is 1, the target q[1]. This will be equal to 1000 when measured.",
-      o2: "The oracle continues encoding s = 1011. Another CNOT gate is applied where control is q[2] whose corresponding bit is 1, the target q[1]. This will be equal to 1010 when measured.",
-      o3: "The oracle completes encoding s = 1011. Another CNOT gate is applied where control is q[2] whose corresponding bit is 1, the target q[1]. This will be equal to 1011 when measured.",
+      o1: "The oracle Uf begins encoding the hidden string s = 1011. A CNOT gate is applied where control is q[0] the first input qubit whose corresponding bit is 1, the target q[4]. This will be equal to 1000 when measured.",
+      o2: "The oracle continues encoding s = 1011. Another CNOT gate is applied where control is q[2] whose corresponding bit is 1, the target q[4]. This will be equal to 1010 when measured.",
+      o3: "The oracle completes encoding s = 1011. Another CNOT gate is applied where control is q[3] whose corresponding bit is 1, the target q[4]. This will be equal to 1011 when measured.",
       finalh: "The final Hadamard gates are applied again to the first n input qubits (q[0] to q[3]), transforming the phase information encoded by the oracle into basis states that correspond exactly to the hidden string s. An Identity gate is applied on the last qubit for clarity.",
       meas: "Measuring the first n qubits (q[0] to q[3]) deterministically reveals the hidden string s = 1011. Unlike classical algorithms that would require n queries to determine s one bit at a time, the Bernstein-Vazirani algorithm discovers the entire string in a single query.",
     };

@@ -12,7 +12,7 @@ const bernsteinVaziraniConfig: CircuitConfig = {
   initialState: zeroState(5),
   allowedGates: ['H', 'I', 'X', 'CNOT', 'M', ''],
 };
-const secret = "1011";
+
 const steps = [
   [
     { lineId: "line-0", gateType: "" },
@@ -101,7 +101,7 @@ const BernsteinVazirani = () => {
         <Circuit 
           config={bernsteinVaziraniConfig} 
           steps={steps}
-          verifyStep={(step, state) => verifyBernsteinVaziraniStep(step, state, secret)}
+          verifyStep={(step, state) => verifyBernsteinVaziraniStep(step, state)}
           explainStep={(step) => explainBernsteinVaziraniStep(step)}
           openQASMStep={(step) => openQASMBernsteinVaziraniStep(step)}/>
       </div>

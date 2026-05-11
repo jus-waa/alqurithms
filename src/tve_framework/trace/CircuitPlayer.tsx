@@ -185,7 +185,7 @@ const useCircuitPlayer = (
           };
         } else if (gate.gateType === "M") {
           const lineIndex = parseInt(gate.lineId.split("-")[1]);
-          const measurementId = `M-${stepIdx}-${lineIndex}`;  // ← ADD lineIndex
+          const measurementId = `M-${stepIdx}-${lineIndex}`;
           slotUpdates[gate.lineId] = [measurementId];
           coveredLines.add(gate.lineId);
           newMultiSlotEntries[measurementId] = { control: lineIndex, target: lineIndex };
@@ -216,10 +216,12 @@ const useCircuitPlayer = (
       if (Object.keys(newMultiSlotEntries).length > 0) {
         setMultiSlots(prev => ({ ...prev, ...newMultiSlotEntries }));
       }
+
       stepIndexRef.current += 1;
       if (onStepChange) {
         await onStepChange(stepIndexRef.current);
       }
+      
       if (stepIndexRef.current < stepsRef.current.length) {
         await waitWithPause(stepDelay);
       }

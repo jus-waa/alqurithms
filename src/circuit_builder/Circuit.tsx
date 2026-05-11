@@ -53,9 +53,10 @@ interface CircuitProps {
 }
 
 const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepChange }:CircuitProps) => {
-  config.locked = true; //disable drag and drop
+  //config.locked = true; //disable drag and drop
   const [state, setState] = useState(config.initialState) 
   const [displayState, setDisplayState] = useState<{label: string, amp: number, prob: number}[]>([]);
+  const [stateVectorString, setStateVectorString] = useState("");
   const currentStateRef = useRef<Qubit>(config.initialState);
   const measurementResultsRef = useRef<Record<string, Qubit>>({});  
   const lines = Array.from({ length: config.qubitCount }, (_,i) => ({
@@ -432,6 +433,9 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
       prob: amp * amp * 100,
     })). filter(({amp}) => Math.abs(amp) > 0.0001);
     setDisplayState(e);
+    setStateVectorString(
+    `[${state.map(v => Number(v.toFixed(3))).join(", ")}]`
+  );
   }
   // execute everytime a gate is dropped in the slot
   useEffect(() => {
@@ -468,7 +472,11 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
           <div className="border border-black/20 p-4 rounded-lg bg-white h-full w-full grid grid-cols-[4fr_1fr] overflow-scroll">
             <div>
               <Probabilities state={state}/>
+              <div>
+                <span className="text-blue-500">{stateVectorString}</span>
+              </div>
             </div>
+            
             <div className="flex flex-col items-end overflow-hidden">
               <div className="font-mono text-xs text-gray-600 w-4/5 h-[27.5rem] overflow-y-auto">
                  {displayState.map(({ label, amp }) => (
@@ -479,6 +487,7 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
                 ))}
               </div>
             </div>
+            
           </div>
           {/* Q SPhere */}
           <div className="w-full">
@@ -503,7 +512,7 @@ const Circuit = ( {config, steps, verifyStep, explainStep, openQASMStep, onStepC
             <div className="flex flex-col gap-4 p-4 border border-black/20 rounded-lg  bg-white w-full h-full">
               <h3 className="pl-2 h-8">Gates</h3>
               {/* List of gates */}
-              <div className="grid grid-cols-6 grid-rows-8 border border-black/20 rounded-sm p-2 gap-2 h-full pointer-events-none opacity-50">
+              <div className="grid grid-cols-6 grid-rows-8 border border-black/20 rounded-sm p-2 gap-2 h-full opacity-50">
                 {config.allowedGates.map(g => {
                   let displayName = g;
                   if (g === "CNOT") displayName = "⊕";

@@ -15,7 +15,7 @@ const oracleExplanations: Record<DeutschFunction, string> = {
   f0: "The oracle Uf implements f0 by applying Identity gates on both qubits, leaving the states unchanged.",
   f1: "The oracle Uf implements f1 by applying a CNOT gate, which creates entanglement between the qubits, correlating their states in a way that is crucial for distinguishing balanced functions from constant ones. The control is the first qubit and the target is the second qubit.",
   f2: "The oracle Uf implements f2 by applying a Z gate on the first qubit and Identity gate on the second qubit, followed by a CNOT gate, then another Z gate on the first qubit and Identity gate on the second qubit. The Z gates flip the phase of the qubit without creating entanglement, while the CNOT gate generates entanglement between the qubits.",
-  f3: "The oracle Uf implements f3 by applying an Identity gate on the first qubit and a Z gate on the second qubit. The first qubit is left unchanged, no entanglement occurs, and the qubits remain separable.",
+  f3: "The oracle Uf implements f3 by applying an Identity gate on the first qubit and a Z gate on the second qubit. The first qubit is left unchanged, and phase flipping the last qubit.",
 };
 
 const finalHExplanations: Record<DeutschFunction, string> = {
