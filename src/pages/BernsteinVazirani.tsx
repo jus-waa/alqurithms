@@ -12,7 +12,6 @@ const bernsteinVaziraniConfig: CircuitConfig = {
   initialState: zeroState(5),
   allowedGates: ['H', 'I', 'X', 'CNOT', 'M', ''],
 };
-const secret = "1011";
 const steps = [
   [
     { lineId: "line-0", gateType: "" },
