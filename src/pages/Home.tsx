@@ -15,7 +15,7 @@ const Home = () => {
           to="/algorithms"
           className='border border-black/20 px-4 py-2 rounded-lg cursor-pointer'
         >
-          Getting Started
+          Proceed to Simulation
         </Link>
       </section>
     </Layout>

@@ -2,6 +2,8 @@ import type { Qubit } from "../../engine/qubit/Qubit";
 import { approx } from "./DeutschVerification";
 import { amp } from "./DeutschVerification";
 
+import { computeFidelity, fidelityPercent } from "../../utils/fidelity";
+
 export type VerificationResult = {
   step: number;
   label: string;
@@ -20,6 +22,91 @@ const labels: Record<string, string> = {
   "finalh": "Final Hadamard",
   "meas": "Measurement",
 };
+
+const bernsteinFidelityHistory: {
+  step: number;
+  phase: string;
+  fidelity: number;
+  fidelityText: string;
+}[] = [];
+
+function saveBernsteinFidelity(step: number, phase: string, fidelityValue: number) {
+  const entry = {
+    step,
+    phase,
+    fidelity: fidelityValue,
+    fidelityText: fidelityPercent(fidelityValue),
+  };
+
+  const existingIndex = bernsteinFidelityHistory.findIndex(
+    (item) => item.step === step && item.phase === phase
+  );
+
+  if (existingIndex >= 0) {
+    bernsteinFidelityHistory[existingIndex] = entry;
+  } else {
+    bernsteinFidelityHistory.push(entry);
+  }
+}
+
+function getExpectedBernsteinState(
+  phase: string,
+  //secretString: string
+): number[] | null {
+  if (phase === "default") {
+    return Array.from({ length: 32 }, (_, i) => (i === 0 ? 1 : 0));
+  }
+ 
+  if (phase === "prep") {
+    return Array.from({ length: 32 }, (_, i) => (i === 16 ? 1 : 0));
+  }
+ 
+  if (phase === "superpos") {
+    // After preparing |00001⟩ and applying H to all 5 qubits,
+    // the ancilla becomes |->, so indices 0..15 are +1/√32 and 16..31 are -1/√32.
+    return Array.from({ length: 32 }, (_, i) => (i < 16 ? 0.177 : -0.177));
+  }
+ 
+  if (phase === "o1") {
+    return Array.from({ length: 32 }, (_, i) => {
+      const base = i % 2 === 0 ? 0.25 : -0.25;
+      const flip = Math.floor(i / 16) % 2 === 1;
+      return flip ? -base : base;
+    });
+  }
+ 
+  if (phase === "o2") {
+    return Array.from({ length: 32 }, (_, i) => {
+      const base = i % 2 === 0 ? 0.25 : -0.25;
+      const group = Math.floor(i / 4);
+      const flip = group < 4 ? group % 2 === 1 : group % 2 === 0;
+      return flip ? -base : base;
+    });
+  }
+ 
+  if (phase === "o3") {
+    const flipGroups = [0, 1, 1, 0, 1, 0, 0, 1];
+    return Array.from({ length: 32 }, (_, i) => {
+      const base = i % 2 === 0 ? 0.25 : -0.25;
+      const flip = flipGroups[Math.floor(i / 4)] === 1;
+      return flip ? -base : base;
+    });
+  }
+ 
+  if (phase === "finalh") {
+    return Array.from({ length: 32 }, (_, i) => {
+      if (i === 13) return Math.sqrt(0.5);
+      if (i === 29) return -Math.sqrt(0.5);
+      return 0;
+    });
+  }
+ 
+  if (phase === "meas") {
+    return null;
+  }
+ 
+  return null;
+}
 
 export function verifyBernsteinVaziraniStep(
   step: number,
@@ -41,23 +128,34 @@ export function verifyBernsteinVaziraniStep(
   let phase = "";
   if (step === 0) {
   phase = "default";
-} else if (step === prep_step) {
-  phase = "prep";
-} else if (step === superpos_step) {
-  phase = "superpos";
-} else if (step >= oracle_step_1 && step < oracle_step_1_end) {
-  phase = "o1";
-} else if (step >= oracle_step_2 && step < oracle_step_2_end) {
-  phase = "o2";
-} else if (step >= oracle_step_3 && step <= oracle_step_3_end) {
-  phase = "o3";
-} else if (step === finalh_step) {
-  phase = "finalh";
-} else if (step >= meas_start && step <= meas_end) {
-  phase = "meas";
-} else {
-  return null;
-}
+  } else if (step === prep_step) {
+    phase = "prep";
+  } else if (step === superpos_step) {
+    phase = "superpos";
+  } else if (step >= oracle_step_1 && step < oracle_step_1_end) {
+    phase = "o1";
+  } else if (step >= oracle_step_2 && step < oracle_step_2_end) {
+    phase = "o2";
+  } else if (step >= oracle_step_3 && step <= oracle_step_3_end) {
+    phase = "o3";
+  } else if (step === finalh_step) {
+    phase = "finalh";
+  } else if (step >= meas_start && step <= meas_end) {
+    phase = "meas";
+  } else {
+    return null;
+  }
+
+ const logicalStepNum: Record<string, number> = {
+    "default": 0,
+    "prep": 1,
+    "superpos": 2,
+    "o1": 3,
+    "o2": 4,   // ← give each oracle its own logical step
+    "o3": 5,
+    "finalh": 6,
+    "meas": 7,
+  };
 
   const label = labels[phase];
   let passed = false;
@@ -76,8 +174,8 @@ export function verifyBernsteinVaziraniStep(
 
   } else if (phase === "superpos") {
     expected = "Equal position on all states";
-    passed = Array.from({ length: 16 }).every((_, i) =>
-      approx(Math.abs(amp(state, i + 16)), 0.177)
+    passed = Array.from({ length: 32 }).every((_, i) =>
+      approx(amp(state, i), i < 16 ? 0.177 : -0.177)
     );
     actual = passed ? "Equal position on all states" : "Not in superposition";
 
@@ -168,16 +266,33 @@ export function verifyBernsteinVaziraniStep(
     }
   }
 
-  const logicalStepNum: Record<string, number> = {
-    "default": 0,
-    "prep": 1,
-    "superpos": 2,
-    "o1": 3,
-    "o2": 3,
-    "o3": 3,
-    "finalh": 4,
-    "meas": 5,
-  };
+  const expectedVec = getExpectedBernsteinState(phase);
+
+  if (expectedVec) {
+    const actualVec = Array.from({ length: 32 }, (_, i) => amp(state, i));
+    const F = computeFidelity(actualVec, expectedVec);
+    
+    
+    const logicalStep = logicalStepNum[phase];
+    saveBernsteinFidelity(logicalStep, phase, F);
+
+    console.log(
+      `Bernstein-Vazirani Step ${step} Fidelity: ${fidelityPercent(F)}`
+    );
+  }
+
+  if (phase === "meas" && step === meas_end) {
+    console.log("=== Bernstein-Vazirani Fidelity Summary ===");
+    console.table(bernsteinFidelityHistory);
+
+    const lastEntry = bernsteinFidelityHistory[bernsteinFidelityHistory.length - 1];
+
+    if (lastEntry) {
+      console.log(
+        `Final Fidelity (${lastEntry.phase}): ${lastEntry.fidelityText}`
+      );
+    }
+  }
 
   return { step: logicalStepNum[phase], label, passed, expected, actual };
 }
